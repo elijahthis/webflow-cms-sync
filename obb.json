@@ -1,0 +1,23 @@
+{
+	"name": "Bounce Readiness",
+	"slug": "bounce-readiness",
+	"location": "Australia",
+	"no-of-staff": "51-100",
+	"languages": "English",
+	"testimonial-count": 3,
+	"no-of-awards": 0,
+	"is-in-person-2": "true",
+	"is-emergency": "false",
+	"service": "Crisis Management",
+	"discipline": "Crisis Management Plans",
+	"logo": {
+		"fileId": "65dd180aef5678d75a4d6cee",
+		"url": "https://uploads-ssl.webflow.com/65dbde4b2b7f4556a0883e2a/65dd180aef5678d75a4d6cee_bounce_read.png",
+		"alt": null
+	},
+	"tagline": "Looking left and right when crossing the road",
+	"website-link": "https://bouncereadiness.com.au",
+	"profile-type": "5868314b2853391e0d9323617e730248",
+	"vendor-rating": 0.8,
+	"city": "Brisbane"
+}
