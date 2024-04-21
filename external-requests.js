@@ -293,7 +293,10 @@ const fetchSingleProfileFromAirtable = async (recordId, res) => {
 };
 
 // ------------------------------------------------- //
-const fetchRecentlyUpdatedDirectoriesFromAirtable = async (lastCheckedDate) => {
+const fetchRecentlyUpdatedDirectoriesFromAirtable = async (
+	lastCheckedDate,
+	tableId
+) => {
 	// Make a request to Airtable API to fetch data
 	let responses = [];
 	let offset;
@@ -301,9 +304,9 @@ const fetchRecentlyUpdatedDirectoriesFromAirtable = async (lastCheckedDate) => {
 
 	do {
 		// Fetch 100 records at a time
-		url = `https://api.airtable.com/v0/${process.env.AIRTABLE_BASE_ID}/${
-			process.env.AIRTABLE_DIRECTORY_BY_LOCATION_VENDOR_TABLE_ID
-		}?Live%20View${offset ? `&offset=${offset}` : ""}${
+		url = `https://api.airtable.com/v0/${
+			process.env.AIRTABLE_BASE_ID
+		}/${tableId}?Live%20View${offset ? `&offset=${offset}` : ""}${
 			lastCheckedDate
 				? `&filterByFormula=IS_AFTER({Last%20Modified},%20"${lastCheckedDate}")`
 				: ""

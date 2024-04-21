@@ -6,7 +6,8 @@ const { executeWithTiming } = require("./helpers");
 const { cronSyncFunction, cronSyncFunction2 } = require("./cron");
 const {
 	profileSyncFunc,
-	directorySyncFunc,
+	directoryByLocationSyncFunc,
+	directoryByServiceSyncFunc,
 	addWebflowIdToAirtableRecordsSyncFunc,
 } = require("./syncFunc");
 const {
@@ -259,8 +260,11 @@ cron.schedule("*/90 * * * * *", async () => {
 		// 	async () =>
 		// 		await addWebflowIdToAirtableRecordsSyncFunc(state.lastCheckedDate)
 		// );
+		// executeWithTiming(
+		// 	async () => await directoryByLocationSyncFunc(state.lastCheckedDate)
+		// );
 		executeWithTiming(
-			async () => await directorySyncFunc(state.lastCheckedDate)
+			async () => await directoryByServiceSyncFunc(state.lastCheckedDate)
 		);
 	} catch (error) {
 	} finally {
