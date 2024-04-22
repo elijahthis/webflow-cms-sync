@@ -100,13 +100,13 @@ const addItemToWebflowCMS = async (collectionID, payload, res) => {
 	}
 };
 
-const updateWebflowCMSItem = async (itemId, payload, res) => {
+const updateWebflowCMSItem = async (collectionID, itemId, payload, res) => {
 	// console.log("payload", payload);
 
 	try {
 		// Make a request to Webflow CMS API to update data
 		const response = await axios.patch(
-			`https://api.webflow.com/v2/collections/${process.env.WEBFLOW_VENDOR_COLLECTION_ID}/items/${itemId}`,
+			`https://api.webflow.com/v2/collections/${collectionID}/items/${itemId}`,
 			payload,
 			{
 				headers: {
@@ -306,7 +306,7 @@ const fetchRecentlyUpdatedDirectoriesFromAirtable = async (
 		// Fetch 100 records at a time
 		url = `https://api.airtable.com/v0/${
 			process.env.AIRTABLE_BASE_ID
-		}/${tableId}?Live%20View${offset ? `&offset=${offset}` : ""}${
+		}/${tableId}?view=Live%20View${offset ? `&offset=${offset}` : ""}${
 			lastCheckedDate
 				? `&filterByFormula=IS_AFTER({Last%20Modified},%20"${lastCheckedDate}")`
 				: ""
