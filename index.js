@@ -303,48 +303,48 @@ const cronWrapper = async (syncFunction, stateKey) => {
 	}
 };
 
-// Schedule polling every 120 seconds --- profiles
-cron.schedule("*/90 * * * * *", async () => {
-	cronWrapper(profileSyncFunc, "profiles");
-});
+// // Schedule polling every 120 seconds --- profiles
+// cron.schedule("*/90 * * * * *", async () => {
+// 	cronWrapper(profileSyncFunc, "profiles");
+// });
 
-// Schedule polling every 120 seconds --- webflow_ID_profiles
-cron.schedule("*/90 * * * * *", async () => {
-	cronWrapper(addWebflowIdToAirtableRecordsSyncFunc, "webflow_ID_profiles");
-});
+// // Schedule polling every 120 seconds --- webflow_ID_profiles
+// cron.schedule("*/90 * * * * *", async () => {
+// 	cronWrapper(addWebflowIdToAirtableRecordsSyncFunc, "webflow_ID_profiles");
+// });
 
-// Schedule polling every 120 seconds --- location_directory
-cron.schedule("*/90 * * * * *", async () => {
-	cronWrapper(directoryByLocationSyncFunc, "location_directory");
-});
+// // Schedule polling every 120 seconds --- location_directory
+// cron.schedule("*/90 * * * * *", async () => {
+// 	cronWrapper(directoryByLocationSyncFunc, "location_directory");
+// });
 
-// Schedule polling every 120 seconds --- service_directory
-cron.schedule("*/90 * * * * *", async () => {
-	cronWrapper(directoryByServiceSyncFunc, "service_directory");
-});
+// // Schedule polling every 120 seconds --- service_directory
+// cron.schedule("*/90 * * * * *", async () => {
+// 	cronWrapper(directoryByServiceSyncFunc, "service_directory");
+// });
 
-// Schedule polling every 120 seconds --- services
-cron.schedule("*/90 * * * * *", async () => {
-	cronWrapper(serviceSyncFunc, "services");
-});
+// // Schedule polling every 120 seconds --- services
+// cron.schedule("*/90 * * * * *", async () => {
+// 	cronWrapper(serviceSyncFunc, "services");
+// });
 
-// Schedule polling every 120 seconds --- disciplines
-cron.schedule("*/90 * * * * *", async () => {
-	cronWrapper(disciplineSyncFunc, "disciplines");
-});
+// // Schedule polling every 120 seconds --- disciplines
+// cron.schedule("*/90 * * * * *", async () => {
+// 	cronWrapper(disciplineSyncFunc, "disciplines");
+// });
 
-// Schedule polling every 120 seconds --- languages
-cron.schedule("*/90 * * * * *", async () => {
-	cronWrapper(languagesSyncFunc, "languages");
-});
+// // Schedule polling every 120 seconds --- languages
+// cron.schedule("*/90 * * * * *", async () => {
+// 	cronWrapper(languagesSyncFunc, "languages");
+// });
 
-// Schedule polling every 120 seconds --- webflow_ID_disciplines
-cron.schedule("*/90 * * * * *", async () => {
-	cronWrapper(
-		addWebflowIdToAirtableDisciplinesSyncFunc,
-		"webflow_ID_disciplines"
-	);
-});
+// // Schedule polling every 120 seconds --- webflow_ID_disciplines
+// cron.schedule("*/90 * * * * *", async () => {
+// 	cronWrapper(
+// 		addWebflowIdToAirtableDisciplinesSyncFunc,
+// 		"webflow_ID_disciplines"
+// 	);
+// });
 
 // Start the server
 app.listen(port, () => {
