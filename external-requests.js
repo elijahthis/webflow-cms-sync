@@ -71,7 +71,12 @@ const fetchProfilesFromAirtable = async (startIndex) => {
 	return responses[responses.length - 1];
 };
 
-const addItemToWebflowCMS = async (collectionID, payload, res) => {
+const addItemToWebflowCMS = async (
+	collectionID,
+	WEBFLOW_TOKEN,
+	payload,
+	res
+) => {
 	// console.log("payload", payload);
 
 	try {
@@ -81,7 +86,7 @@ const addItemToWebflowCMS = async (collectionID, payload, res) => {
 			payload,
 			{
 				headers: {
-					Authorization: `Bearer ${process.env.WEBFLOW_TOKEN}`,
+					Authorization: `Bearer ${WEBFLOW_TOKEN}`,
 				},
 			}
 		);
@@ -100,7 +105,13 @@ const addItemToWebflowCMS = async (collectionID, payload, res) => {
 	}
 };
 
-const updateWebflowCMSItem = async (collectionID, itemId, payload, res) => {
+const updateWebflowCMSItem = async (
+	collectionID,
+	WEBFLOW_TOKEN,
+	itemId,
+	payload,
+	res
+) => {
 	// console.log("payload", payload);
 
 	try {
@@ -110,7 +121,7 @@ const updateWebflowCMSItem = async (collectionID, itemId, payload, res) => {
 			payload,
 			{
 				headers: {
-					Authorization: `Bearer ${process.env.WEBFLOW_TOKEN}`,
+					Authorization: `Bearer ${WEBFLOW_TOKEN}`,
 				},
 			}
 		);

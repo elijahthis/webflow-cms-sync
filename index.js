@@ -31,8 +31,38 @@ const port = process.env.PORT || 8000;
 
 // State
 const state = {
-	isJobRunning: false,
-	lastCheckedDate: new Date("01-01-1970").toISOString(),
+	profiles: {
+		isJobRunning: false,
+		lastCheckedDate: new Date("01-01-1970").toISOString(),
+	},
+	webflow_ID_profiles: {
+		isJobRunning: false,
+		lastCheckedDate: new Date("01-01-1970").toISOString(),
+	},
+	location_directory: {
+		isJobRunning: false,
+		lastCheckedDate: new Date("01-01-1970").toISOString(),
+	},
+	service_directory: {
+		isJobRunning: false,
+		lastCheckedDate: new Date("01-01-1970").toISOString(),
+	},
+	services: {
+		isJobRunning: false,
+		lastCheckedDate: new Date("01-01-1970").toISOString(),
+	},
+	disciplines: {
+		isJobRunning: false,
+		lastCheckedDate: new Date("01-01-1970").toISOString(),
+	},
+	languages: {
+		isJobRunning: false,
+		lastCheckedDate: new Date("01-01-1970").toISOString(),
+	},
+	webflow_ID_disciplines: {
+		isJobRunning: false,
+		lastCheckedDate: new Date("01-01-1970").toISOString(),
+	},
 };
 
 app.get("/", (req, res) => {
@@ -247,64 +277,73 @@ app.get("/test-2", async (req, res) => {
 	}
 });
 
-const setIsJobRunning = (value) => {
-	state.isJobRunning = value;
-};
-
-// Schedule polling every 120 seconds
-cron.schedule("*/90 * * * * *", async () => {
+const cronWrapper = async (syncFunction, stateKey) => {
 	const cronAfterFunc = () => {
-		setIsJobRunning(false);
+		state[stateKey].isJobRunning = false;
 		console.log("CRON job is done.");
-		state.lastCheckedDate = new Date().toISOString();
+		state[stateKey].lastCheckedDate = new Date().toISOString();
 	};
 
 	// If the job is already running, exit early
-	if (state.isJobRunning) {
+	if (state[stateKey].isJobRunning) {
 		console.log("Previous job is still running. Skipping this execution.");
 		return;
 	}
 
 	// Set the flag to indicate that the job is now running
-	state.isJobRunning = true;
+	state[stateKey].isJobRunning = true;
 
 	try {
-		// executeWithTiming(
-		// 	async () => await profileSyncFunc(state.lastCheckedDate, cronAfterFunc)
-		// );
-		// executeWithTiming(
-		// 	async () =>
-		// 		await addWebflowIdToAirtableRecordsSyncFunc(state.lastCheckedDate)
-		// );
-		// executeWithTiming(
-		// 	async () =>
-		// 		await directoryByLocationSyncFunc(state.lastCheckedDate, cronAfterFunc)
-		// );
 		executeWithTiming(
 			async () =>
-				await directoryByServiceSyncFunc(state.lastCheckedDate, cronAfterFunc)
+				await syncFunction(state[stateKey].lastCheckedDate, cronAfterFunc)
 		);
-		// executeWithTiming(
-		// 	async () => await serviceSyncFunc(state.lastCheckedDate, cronAfterFunc)
-		// );
-		// executeWithTiming(
-		// 	async () => await disciplineSyncFunc(state.lastCheckedDate, cronAfterFunc)
-		// );
-		// executeWithTiming(
-		// 	async () => await languagesSyncFunc(state.lastCheckedDate, cronAfterFunc)
-		// );
-		// executeWithTiming(
-		// 	async () =>
-		// 		await addWebflowIdToAirtableDisciplinesSyncFunc(
-		// 			state.lastCheckedDate,
-		// 			cronAfterFunc
-		// 		)
-		// );
 	} catch (error) {
 	} finally {
-		// Reset the flag after the job is done
-		// state.isJobRunning = false;
 	}
+};
+
+// Schedule polling every 120 seconds --- profiles
+cron.schedule("*/90 * * * * *", async () => {
+	cronWrapper(profileSyncFunc, "profiles");
+});
+
+// Schedule polling every 120 seconds --- webflow_ID_profiles
+cron.schedule("*/90 * * * * *", async () => {
+	cronWrapper(addWebflowIdToAirtableRecordsSyncFunc, "webflow_ID_profiles");
+});
+
+// Schedule polling every 120 seconds --- location_directory
+cron.schedule("*/90 * * * * *", async () => {
+	cronWrapper(directoryByLocationSyncFunc, "location_directory");
+});
+
+// Schedule polling every 120 seconds --- service_directory
+cron.schedule("*/90 * * * * *", async () => {
+	cronWrapper(directoryByServiceSyncFunc, "service_directory");
+});
+
+// Schedule polling every 120 seconds --- services
+cron.schedule("*/90 * * * * *", async () => {
+	cronWrapper(serviceSyncFunc, "services");
+});
+
+// Schedule polling every 120 seconds --- disciplines
+cron.schedule("*/90 * * * * *", async () => {
+	cronWrapper(disciplineSyncFunc, "disciplines");
+});
+
+// Schedule polling every 120 seconds --- languages
+cron.schedule("*/90 * * * * *", async () => {
+	cronWrapper(languagesSyncFunc, "languages");
+});
+
+// Schedule polling every 120 seconds --- webflow_ID_disciplines
+cron.schedule("*/90 * * * * *", async () => {
+	cronWrapper(
+		addWebflowIdToAirtableDisciplinesSyncFunc,
+		"webflow_ID_disciplines"
+	);
 });
 
 // Start the server
