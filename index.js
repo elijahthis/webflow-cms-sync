@@ -280,10 +280,10 @@ cron.schedule("*/90 * * * * *", async () => {
 		// 	async () =>
 		// 		await directoryByLocationSyncFunc(state.lastCheckedDate, cronAfterFunc)
 		// );
-		// executeWithTiming(
-		// 	async () =>
-		// 		await directoryByServiceSyncFunc(state.lastCheckedDate, cronAfterFunc)
-		// );
+		executeWithTiming(
+			async () =>
+				await directoryByServiceSyncFunc(state.lastCheckedDate, cronAfterFunc)
+		);
 		// executeWithTiming(
 		// 	async () => await serviceSyncFunc(state.lastCheckedDate, cronAfterFunc)
 		// );
