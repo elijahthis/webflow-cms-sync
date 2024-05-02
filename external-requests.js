@@ -150,25 +150,6 @@ const fetchAirtableRecordsCount = async () => {
 	}
 };
 
-const fetchWebflowCMSRecordsCount = async () => {
-	try {
-		const response = await axios.get(
-			`https://api.webflow.com/v2/collections/${process.env.WEBFLOW_VENDOR_COLLECTION_ID}/items?limit=1`,
-			{
-				headers: {
-					Authorization: `Bearer ${process.env.WEBFLOW_TOKEN}`,
-				},
-			}
-		);
-		const numRecordsInWebflow = response.data.pagination.total;
-		console.log("numRecordsInWebflow", numRecordsInWebflow);
-
-		return numRecordsInWebflow;
-	} catch (error) {
-		console.error("Error polling Webflow CMS:", error);
-	}
-};
-
 // ------------------------------------------------- //
 const fetchRecentlyUpdatedProfilesFromAirtable = async (lastCheckedDate) => {
 	// Make a request to Airtable API to fetch data
@@ -242,34 +223,6 @@ const fetchRecentlyCreatedProfilesFromAirtable = async (lastCheckedDate) => {
 	return responses.flat();
 };
 
-const fetchAllWebflowCMSRecords = async () => {
-	try {
-		const recordCount = await fetchWebflowCMSRecordsCount();
-
-		const no_of_times = Math.floor(recordCount / 100) + 1;
-		let responses = [];
-
-		for (let i = 0; i < no_of_times; i++) {
-			console.log(`Number ${i + 1}`);
-			const response = await axios.get(
-				`https://api.webflow.com/v2/collections/${
-					process.env.WEBFLOW_VENDOR_COLLECTION_ID
-				}/items?limit=100&offset=${i * 100}`,
-				{
-					headers: {
-						Authorization: `Bearer ${process.env.WEBFLOW_TOKEN}`,
-					},
-				}
-			);
-			responses.push(response.data?.items);
-		}
-
-		return responses.flat();
-	} catch (error) {
-		console.error("Error polling Webflow CMS:", error);
-	}
-};
-
 const fetchSingleProfileFromAirtable = async (recordId, res) => {
 	// Make a request to Airtable API to fetch data
 	url = `https://api.airtable.com/v0/${process.env.AIRTABLE_BASE_ID}/${process.env.AIRTABLE_PROFILE_TABLE_ID}/${recordId}`;
@@ -332,10 +285,10 @@ const fetchRecentlyUpdatedDirectoriesFromAirtable = async (
 	return responses.flat();
 };
 
-const fetchWebflowCMSDirectoryRecordsCount = async () => {
+const fetchWebflowCMSRecordsCount = async (collectionID) => {
 	try {
 		const response = await axios.get(
-			`https://api.webflow.com/v2/collections/${process.env.WEBFLOW_DIRECTORY_COLLECTION_ID}/items?limit=1`,
+			`https://api.webflow.com/v2/collections/${collectionID}/items?limit=1`,
 			{
 				headers: {
 					Authorization: `Bearer ${process.env.WEBFLOW_TOKEN}`,
@@ -351,9 +304,9 @@ const fetchWebflowCMSDirectoryRecordsCount = async () => {
 	}
 };
 
-const fetchAllWebflowCMSDirectoryRecords = async () => {
+const fetchAllWebflowCMSRecords = async (collectionID) => {
 	try {
-		const recordCount = await fetchWebflowCMSDirectoryRecordsCount();
+		const recordCount = await fetchWebflowCMSRecordsCount(collectionID);
 
 		const no_of_times = Math.floor(recordCount / 100) + 1;
 		let responses = [];
@@ -361,9 +314,9 @@ const fetchAllWebflowCMSDirectoryRecords = async () => {
 		for (let i = 0; i < no_of_times; i++) {
 			console.log(`Number ${i + 1}`);
 			const response = await axios.get(
-				`https://api.webflow.com/v2/collections/${
-					process.env.WEBFLOW_DIRECTORY_COLLECTION_ID
-				}/items?limit=100&offset=${i * 100}`,
+				`https://api.webflow.com/v2/collections/${collectionID}/items?limit=100&offset=${
+					i * 100
+				}`,
 				{
 					headers: {
 						Authorization: `Bearer ${process.env.WEBFLOW_TOKEN}`,
@@ -402,6 +355,50 @@ const fetchSingleDirectoryProfileFromAirtable = async (recordId, res) => {
 };
 
 // ------------------------------------------------- //
+const fetchRecentlyUpdatedServicesFromAirtable = async (
+	lastCheckedDate,
+	tableId,
+	view = undefined
+) => {
+	// Make a request to Airtable API to fetch data
+	let responses = [];
+	let offset;
+	let url;
+
+	do {
+		// Fetch 100 records at a time
+		url = `https://api.airtable.com/v0/${
+			process.env.AIRTABLE_BASE_ID
+		}/${tableId}?${view ? `view=${view}&` : ""}${
+			offset ? `offset=${offset}` : ""
+		}${
+			lastCheckedDate
+				? `&filterByFormula=IS_AFTER({Last%20Modified},%20"${lastCheckedDate}")`
+				: ""
+		}`;
+		// view=Grid%20View
+		try {
+			let response = await axios.get(url, {
+				headers: {
+					Authorization: `Bearer ${process.env.AIRTABLE_TOKEN}`,
+				},
+			});
+			responses.push(response.data?.records);
+			offset = response.data.offset;
+			console.log(response.data?.records?.length, offset, url);
+		} catch (error) {
+			console.log("Error fetching records", error.response);
+			throw new Error("Error fetching records", error);
+		} finally {
+			console.log("Fetched!");
+		}
+	} while (offset);
+
+	return responses.flat();
+};
+// ------------------------------------------------- //
+
+// ------------------------------------------------- //
 const modifyAirtableRecord = async (tableId, recordId, payload, res) => {
 	// Make a request to Airtable API to update data
 	url = `https://api.airtable.com/v0/${process.env.AIRTABLE_BASE_ID}/${tableId}/${recordId}`;
@@ -428,14 +425,13 @@ module.exports = {
 	fetchProfilesFromAirtable,
 	addItemToWebflowCMS,
 	fetchAirtableRecordsCount,
-	fetchWebflowCMSRecordsCount,
 	fetchRecentlyUpdatedProfilesFromAirtable,
 	fetchRecentlyCreatedProfilesFromAirtable,
-	fetchAllWebflowCMSRecords,
 	updateWebflowCMSItem,
 	fetchSingleProfileFromAirtable,
 	fetchRecentlyUpdatedDirectoriesFromAirtable,
-	fetchAllWebflowCMSDirectoryRecords,
+	fetchAllWebflowCMSRecords,
 	fetchSingleDirectoryProfileFromAirtable,
 	modifyAirtableRecord,
+	fetchRecentlyUpdatedServicesFromAirtable,
 };

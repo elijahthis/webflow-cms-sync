@@ -7,16 +7,18 @@ const {
 	fetchAllWebflowCMSRecords,
 	updateWebflowCMSItem,
 	fetchRecentlyUpdatedDirectoriesFromAirtable,
-	fetchAllWebflowCMSDirectoryRecords,
 	modifyAirtableRecord,
+	fetchRecentlyUpdatedServicesFromAirtable,
 } = require("./external-requests");
 const { generateRealIndex, executeWithTiming } = require("./helpers");
 
-const profileSyncFunc = async (lastCheckedDate) => {
+const profileSyncFunc = async (lastCheckedDate, afterFunc = () => {}) => {
 	try {
 		const updatedAirtableProfiles =
 			await fetchRecentlyUpdatedProfilesFromAirtable(lastCheckedDate);
-		const allWebflowCMSRecords = await fetchAllWebflowCMSRecords();
+		const allWebflowCMSRecords = await fetchAllWebflowCMSRecords(
+			process.env.WEBFLOW_VENDOR_COLLECTION_ID
+		);
 
 		if (updatedAirtableProfiles.length === 0) {
 			console.log("No updated profiles found in Airtable.");
@@ -26,6 +28,7 @@ const profileSyncFunc = async (lastCheckedDate) => {
 		const batchSize = 15;
 		let startIndex = 0;
 		let endIndex = Math.min(batchSize, updatedAirtableProfiles.length);
+		let batchCounter = 0;
 
 		const responses = [];
 
@@ -34,6 +37,8 @@ const profileSyncFunc = async (lastCheckedDate) => {
 				startIndex,
 				endIndex
 			);
+
+			console.log("startIndex", startIndex, "endIndex", endIndex);
 
 			const webflowUpdatePromises = batchAirtableProfiles.map(
 				async (airtableProfile) => {
@@ -68,7 +73,9 @@ const profileSyncFunc = async (lastCheckedDate) => {
 										),
 									"no-of-staff": airtableProfile.fields["No. of Staff"],
 									languages:
-										airtableProfile.fields["String Languages (from Languages)"],
+										airtableProfile.fields[
+											"Language (from Languages #2)"
+										]?.join(", "),
 									"testimonial-count":
 										airtableProfile.fields["Client Testimonials"]?.length ?? 0,
 									"no-of-awards": airtableProfile.fields["Awards"]?.length ?? 0,
@@ -123,7 +130,8 @@ const profileSyncFunc = async (lastCheckedDate) => {
 						console.log(
 							`Updating Webflow CMS record with ID ${webflowProfile.id} ${webflowProfile?.fieldData?.name}...`
 						);
-						console.log("Not today...");
+
+						// console.log("Not today...");
 					} else {
 						response = await addItemToWebflowCMS(
 							process.env.WEBFLOW_VENDOR_COLLECTION_ID,
@@ -147,7 +155,9 @@ const profileSyncFunc = async (lastCheckedDate) => {
 										),
 									"no-of-staff": airtableProfile.fields["No. of Staff"],
 									languages:
-										airtableProfile.fields["String Languages (from Languages)"],
+										airtableProfile.fields[
+											"Language (from Languages #2)"
+										]?.join(", "),
 									"testimonial-count":
 										airtableProfile.fields["Client Testimonials"]?.length ?? 0,
 									"no-of-awards": airtableProfile.fields["Awards"]?.length ?? 0,
@@ -213,6 +223,13 @@ const profileSyncFunc = async (lastCheckedDate) => {
 			const batchResponses = await Promise.all(webflowUpdatePromises);
 			responses.push(...batchResponses);
 
+			batchCounter++;
+			if (batchCounter === 3) {
+				console.log("Reached rate limit, pausing for 60 seconds...");
+				await new Promise((resolve) => setTimeout(resolve, 45000)); // Pause for 45 seconds
+				batchCounter = 0; // Reset the batch counter after pausing
+			}
+
 			// if (responses.length < 45) {
 			startIndex = endIndex;
 			endIndex = Math.min(
@@ -228,17 +245,25 @@ const profileSyncFunc = async (lastCheckedDate) => {
 	} catch (error) {
 		console.log(error);
 		return [];
+	} finally {
+		afterFunc();
 	}
 };
 
-const directoryByLocationSyncFunc = async (lastCheckedDate) => {
+const directoryByLocationSyncFunc = async (
+	lastCheckedDate,
+	afterFunc = () => {}
+) => {
 	try {
 		const updatedAirtableProfiles =
-			await fetchRecentlyUpdatedDirectoriesFromAirtable(
+			await fetchRecentlyUpdatedServicesFromAirtable(
 				lastCheckedDate,
-				process.env.AIRTABLE_DIRECTORY_BY_LOCATION_VENDOR_TABLE_ID
+				process.env.AIRTABLE_DIRECTORY_BY_LOCATION_VENDOR_TABLE_ID,
+				"Live%20View"
 			);
-		const allWebflowCMSRecords = await fetchAllWebflowCMSDirectoryRecords();
+		const allWebflowCMSRecords = await fetchAllWebflowCMSRecords(
+			process.env.WEBFLOW_DIRECTORY_COLLECTION_ID
+		);
 
 		console.log(updatedAirtableProfiles.length, "Updated Directories Found.");
 		if (updatedAirtableProfiles.length === 0) {
@@ -249,6 +274,7 @@ const directoryByLocationSyncFunc = async (lastCheckedDate) => {
 		const batchSize = 15;
 		let startIndex = 0;
 		let endIndex = Math.min(batchSize, updatedAirtableProfiles.length);
+		let batchCounter = 0;
 
 		const responses = [];
 
@@ -300,41 +326,41 @@ const directoryByLocationSyncFunc = async (lastCheckedDate) => {
 									}))
 									?.sort((a, b) => b.vendor_rating - a.vendor_rating)
 							: [];
-						response = await updateWebflowCMSItem(
-							process.env.WEBFLOW_DIRECTORY_COLLECTION_ID,
-							webflowProfile?.id,
-							{
-								fieldData: {
-									name: airtableProfile.fields["H1 Title Text"],
-									slug: airtableProfile.fields["Slug"]?.trim(),
-									subheading: airtableProfile.fields["Hero Summary"],
-									"hero-tag-summary":
-										airtableProfile.fields["Hero Tag Summary"],
-									"breadcrumb-text": airtableProfile.fields["Breadcrumb Title"],
-									city: airtableProfile.fields["city_ascii (from City)"]?.[0],
-									country: airtableProfile.fields["Country"]?.[0],
-									"featured-vendors":
-										vendorObjList?.length > 0
-											? vendorObjList
-													?.slice(0, 2)
-													?.map((item) => item?.webflowID)
-											: [],
-									vendors:
-										vendorObjList?.length > 2
-											? vendorObjList?.slice(2)?.map((item) => item?.webflowID)
-											: [],
-									"title-tag": airtableProfile.fields["Meta: Title"],
-									"meta-description":
-										airtableProfile.fields["Meta: Description"],
-									"page-body-copy":
-										airtableProfile.fields["Page Body Copy"] ?? "",
-								},
-							}
-						);
-						console.log(
-							`Updating Webflow CMS record with ID ${webflowProfile.id} ${webflowProfile?.fieldData?.name}...`
-						);
-						// console.log("Not today...");
+						// response = await updateWebflowCMSItem(
+						// 	process.env.WEBFLOW_DIRECTORY_COLLECTION_ID,
+						// 	webflowProfile?.id,
+						// 	{
+						// 		fieldData: {
+						// 			name: airtableProfile.fields["H1 Title Text"],
+						// 			slug: airtableProfile.fields["Slug"]?.trim(),
+						// 			subheading: airtableProfile.fields["Hero Summary"],
+						// 			"hero-tag-summary":
+						// 				airtableProfile.fields["Hero Tag Summary"],
+						// 			"breadcrumb-text": airtableProfile.fields["Breadcrumb Title"],
+						// 			city: airtableProfile.fields["city_ascii (from City)"]?.[0],
+						// 			country: airtableProfile.fields["Country"]?.[0],
+						// 			"featured-vendors":
+						// 				vendorObjList?.length > 0
+						// 					? vendorObjList
+						// 							?.slice(0, 2)
+						// 							?.map((item) => item?.webflowID)
+						// 					: [],
+						// 			vendors:
+						// 				vendorObjList?.length > 2
+						// 					? vendorObjList?.slice(2)?.map((item) => item?.webflowID)
+						// 					: [],
+						// 			"title-tag": airtableProfile.fields["Meta: Title"],
+						// 			"meta-description":
+						// 				airtableProfile.fields["Meta: Description"],
+						// 			"page-body-copy":
+						// 				airtableProfile.fields["Page Body Copy"] ?? "",
+						// 		},
+						// 	}
+						// );
+						// console.log(
+						// 	`Updating Webflow CMS record with ID ${webflowProfile.id} ${webflowProfile?.fieldData?.name}...`
+						// );
+						console.log("Not today...");
 					} else {
 						const vendorObjList = airtableProfile.fields?.[
 							"Webflow ID (from Vendor) (from Address for Service) (from City)"
@@ -397,6 +423,13 @@ const directoryByLocationSyncFunc = async (lastCheckedDate) => {
 			const batchResponses = await Promise.all(webflowUpdatePromises);
 			responses.push(...batchResponses);
 
+			batchCounter++;
+			if (batchCounter === 3) {
+				console.log("Reached rate limit, pausing for 60 seconds...");
+				await new Promise((resolve) => setTimeout(resolve, 45000)); // Pause for 45 seconds
+				batchCounter = 0; // Reset the batch counter after pausing
+			}
+
 			// if (responses.length < 45) {
 			startIndex = endIndex;
 			endIndex = Math.min(
@@ -415,16 +448,24 @@ const directoryByLocationSyncFunc = async (lastCheckedDate) => {
 	} catch (error) {
 		console.log(error);
 		return [];
+	} finally {
+		afterFunc();
 	}
 };
-const directoryByServiceSyncFunc = async (lastCheckedDate) => {
+const directoryByServiceSyncFunc = async (
+	lastCheckedDate,
+	afterFunc = () => {}
+) => {
 	try {
 		const updatedAirtableProfiles =
-			await fetchRecentlyUpdatedDirectoriesFromAirtable(
+			await fetchRecentlyUpdatedServicesFromAirtable(
 				lastCheckedDate,
-				process.env.AIRTABLE_DIRECTORY_BY_SERVICE_DISCIPLINES_TABLE_ID
+				process.env.AIRTABLE_DIRECTORY_BY_SERVICE_DISCIPLINES_TABLE_ID,
+				"Live%20View"
 			);
-		const allWebflowCMSRecords = await fetchAllWebflowCMSDirectoryRecords();
+		const allWebflowCMSRecords = await fetchAllWebflowCMSRecords(
+			process.env.WEBFLOW_DIRECTORY_COLLECTION_ID
+		);
 
 		console.log(updatedAirtableProfiles.length, "Updated Directories Found.");
 		if (updatedAirtableProfiles.length === 0) {
@@ -435,6 +476,7 @@ const directoryByServiceSyncFunc = async (lastCheckedDate) => {
 		const batchSize = 15;
 		let startIndex = 0;
 		let endIndex = Math.min(batchSize, updatedAirtableProfiles.length);
+		let batchCounter = 0;
 
 		const responses = [];
 
@@ -487,41 +529,41 @@ const directoryByServiceSyncFunc = async (lastCheckedDate) => {
 									?.sort((a, b) => b.vendor_rating - a.vendor_rating)
 							: [];
 
-						response = await updateWebflowCMSItem(
-							process.env.WEBFLOW_DIRECTORY_COLLECTION_ID,
-							webflowProfile?.id,
-							{
-								fieldData: {
-									name: airtableProfile.fields["H1 Title Text"],
-									slug: airtableProfile.fields["Slug"]?.trim(),
-									subheading: airtableProfile.fields["Hero Summary"],
-									"breadcrumb-text": airtableProfile.fields["Breadcrumb Title"],
-									"hero-tag-summary":
-										airtableProfile.fields["Hero Tag Summary"],
-									city: airtableProfile.fields?.["city_ascii (from City)"]?.[0],
-									country: airtableProfile.fields?.["Country"]?.[0],
-									"featured-vendors":
-										vendorObjList?.length > 0
-											? vendorObjList
-													?.slice(0, 2)
-													?.map((item) => item?.webflowID)
-											: [],
-									vendors:
-										vendorObjList?.length > 2
-											? vendorObjList?.slice(2)?.map((item) => item?.webflowID)
-											: [],
-									"title-tag": airtableProfile.fields["Meta: Title"],
-									"meta-description":
-										airtableProfile.fields["Meta: Description"],
-									"page-body-copy":
-										airtableProfile.fields["Page Body Copy"] ?? "",
-								},
-							}
-						);
-						console.log(
-							`Updating Webflow CMS record with ID ${webflowProfile.id} ${webflowProfile?.fieldData?.name}...`
-						);
-						// console.log("Not today...");
+						// response = await updateWebflowCMSItem(
+						// 	process.env.WEBFLOW_DIRECTORY_COLLECTION_ID,
+						// 	webflowProfile?.id,
+						// 	{
+						// 		fieldData: {
+						// 			name: airtableProfile.fields["H1 Title Text"],
+						// 			slug: airtableProfile.fields["Slug"]?.trim(),
+						// 			subheading: airtableProfile.fields["Hero Summary"],
+						// 			"breadcrumb-text": airtableProfile.fields["Breadcrumb Title"],
+						// 			"hero-tag-summary":
+						// 				airtableProfile.fields["Hero Tag Summary"],
+						// 			city: airtableProfile.fields?.["city_ascii (from City)"]?.[0],
+						// 			country: airtableProfile.fields?.["Country"]?.[0],
+						// 			"featured-vendors":
+						// 				vendorObjList?.length > 0
+						// 					? vendorObjList
+						// 							?.slice(0, 2)
+						// 							?.map((item) => item?.webflowID)
+						// 					: [],
+						// 			vendors:
+						// 				vendorObjList?.length > 2
+						// 					? vendorObjList?.slice(2)?.map((item) => item?.webflowID)
+						// 					: [],
+						// 			"title-tag": airtableProfile.fields["Meta: Title"],
+						// 			"meta-description":
+						// 				airtableProfile.fields["Meta: Description"],
+						// 			"page-body-copy":
+						// 				airtableProfile.fields["Page Body Copy"] ?? "",
+						// 		},
+						// 	}
+						// );
+						// console.log(
+						// 	`Updating Webflow CMS record with ID ${webflowProfile.id} ${webflowProfile?.fieldData?.name}...`
+						// );
+						console.log("Not today...");
 					} else {
 						const vendorObjList = airtableProfile.fields?.[
 							"Webflow ID (from Profiles) (from Disciplines)"
@@ -584,6 +626,13 @@ const directoryByServiceSyncFunc = async (lastCheckedDate) => {
 			const batchResponses = await Promise.all(webflowUpdatePromises);
 			responses.push(...batchResponses);
 
+			batchCounter++;
+			if (batchCounter === 3) {
+				console.log("Reached rate limit, pausing for 60 seconds...");
+				await new Promise((resolve) => setTimeout(resolve, 45000)); // Pause for 45 seconds
+				batchCounter = 0; // Reset the batch counter after pausing
+			}
+
 			// if (responses.length < 45) {
 			startIndex = endIndex;
 			endIndex = Math.min(
@@ -602,6 +651,334 @@ const directoryByServiceSyncFunc = async (lastCheckedDate) => {
 	} catch (error) {
 		console.log(error);
 		return [];
+	} finally {
+		afterFunc();
+	}
+};
+
+const serviceSyncFunc = async (lastCheckedDate, afterFunc = () => {}) => {
+	try {
+		const updatedAirtableProfiles =
+			await fetchRecentlyUpdatedServicesFromAirtable(
+				lastCheckedDate,
+				process.env.AIRTABLE_SERVICE_TABLE_ID
+			);
+		const allWebflowCMSRecords = await fetchAllWebflowCMSRecords(
+			process.env.WEBFLOW_SERVICE_COLLECTION_ID
+		);
+
+		console.log(updatedAirtableProfiles.length, "Updated Directories Found.");
+		if (updatedAirtableProfiles.length === 0) {
+			console.log("No updated Directories found in Airtable.");
+			return [];
+		}
+
+		const batchSize = 15;
+		let startIndex = 0;
+		let endIndex = Math.min(batchSize, updatedAirtableProfiles.length);
+		let batchCounter = 0;
+
+		const responses = [];
+
+		while (startIndex < updatedAirtableProfiles.length) {
+			const batchAirtableProfiles = updatedAirtableProfiles.slice(
+				startIndex,
+				endIndex
+			);
+			console.log("startIndex", startIndex, "endIndex", endIndex);
+
+			const webflowUpdatePromises = batchAirtableProfiles.map(
+				async (airtableProfile) => {
+					let response;
+					const webflowProfile = allWebflowCMSRecords.find(
+						(webflowProfile) =>
+							webflowProfile.fieldData.slug ===
+							airtableProfile.fields["service_id"]
+					);
+
+					if (webflowProfile) {
+						response = await updateWebflowCMSItem(
+							process.env.WEBFLOW_SERVICE_COLLECTION_ID,
+							webflowProfile?.id,
+							{
+								fieldData: {
+									name: airtableProfile.fields["Name"],
+									slug: airtableProfile.fields["service_id"]?.trim(),
+									disciplines:
+										airtableProfile.fields["Webflow ID (from Discipline V2)"],
+								},
+							}
+						);
+						console.log(
+							`Updating Webflow CMS record with ID ${webflowProfile.id} ${webflowProfile?.fieldData?.name}...`
+						);
+						// console.log("Not today...");
+					} else {
+						response = await addItemToWebflowCMS(
+							process.env.WEBFLOW_SERVICE_COLLECTION_ID,
+							{
+								fieldData: {
+									name: airtableProfile.fields["Name"],
+									slug: airtableProfile.fields["service_id"]?.trim(),
+									disciplines:
+										airtableProfile.fields["Webflow ID (from Discipline V2)"],
+								},
+							}
+						);
+						console.log(
+							`Creating a new Webflow CMS record for ${airtableProfile.fields["Name"]} ${airtableProfile.fields["service_id"]} ...`
+						);
+					}
+
+					return response;
+				}
+			);
+
+			const batchResponses = await Promise.all(webflowUpdatePromises);
+			responses.push(...batchResponses);
+
+			batchCounter++;
+			if (batchCounter === 3) {
+				console.log("Reached rate limit, pausing for 60 seconds...");
+				await new Promise((resolve) => setTimeout(resolve, 45000)); // Pause for 45 seconds
+				batchCounter = 0; // Reset the batch counter after pausing
+			}
+
+			// if (responses.length < 45) {
+			startIndex = endIndex;
+			endIndex = Math.min(
+				startIndex + batchSize,
+				updatedAirtableProfiles.length
+			);
+			// }
+		}
+
+		console.log(
+			responses.length,
+			"Directories Updated/Created in Webflow CMS:"
+		);
+
+		return responses;
+	} catch (error) {
+		console.log(error);
+		return [];
+	} finally {
+		afterFunc();
+	}
+};
+
+const disciplineSyncFunc = async (lastCheckedDate, afterFunc = () => {}) => {
+	try {
+		const updatedAirtableProfiles =
+			await fetchRecentlyUpdatedServicesFromAirtable(
+				lastCheckedDate,
+				process.env.AIRTABLE_DISCIPLINES_TABLE_ID
+			);
+		const allWebflowCMSRecords = await fetchAllWebflowCMSRecords(
+			process.env.WEBFLOW_DISCIPLINE_COLLECTION_ID
+		);
+
+		console.log(updatedAirtableProfiles.length, "Updated Directories Found.");
+		if (updatedAirtableProfiles.length === 0) {
+			console.log("No updated Directories found in Airtable.");
+			return [];
+		}
+
+		const batchSize = 15;
+		let startIndex = 0;
+		let endIndex = Math.min(batchSize, updatedAirtableProfiles.length);
+		let batchCounter = 0;
+
+		const responses = [];
+
+		while (startIndex < updatedAirtableProfiles.length) {
+			const batchAirtableProfiles = updatedAirtableProfiles.slice(
+				startIndex,
+				endIndex
+			);
+			console.log("startIndex", startIndex, "endIndex", endIndex);
+
+			const webflowUpdatePromises = batchAirtableProfiles.map(
+				async (airtableProfile) => {
+					let response;
+					const webflowProfile = allWebflowCMSRecords.find(
+						(webflowProfile) =>
+							webflowProfile.fieldData.slug ===
+							airtableProfile.fields["discipline_id"]
+					);
+
+					if (webflowProfile) {
+						// response = await updateWebflowCMSItem(
+						// 	process.env.WEBFLOW_DISCIPLINE_COLLECTION_ID,
+						// 	webflowProfile?.id,
+						// 	{
+						// 		fieldData: {
+						// 			name: airtableProfile.fields["Name"],
+						// 			slug: airtableProfile.fields["discipline_id"]?.trim(),
+						// 		},
+						// 	}
+						// );
+						// console.log(
+						// 	`Updating Webflow CMS record with ID ${webflowProfile.id} ${webflowProfile?.fieldData?.name}...`
+						// );
+						console.log("Not today...");
+					} else {
+						response = await addItemToWebflowCMS(
+							process.env.WEBFLOW_DISCIPLINE_COLLECTION_ID,
+							{
+								fieldData: {
+									name: airtableProfile.fields["Name"],
+									slug: airtableProfile.fields["discipline_id"]?.trim(),
+								},
+							}
+						);
+						console.log(
+							`Creating a new Webflow CMS record for ${airtableProfile.fields["Name"]} ${airtableProfile.fields["discipline_id"]} ...`
+						);
+					}
+
+					return response;
+				}
+			);
+
+			const batchResponses = await Promise.all(webflowUpdatePromises);
+			responses.push(...batchResponses);
+
+			batchCounter++;
+			if (batchCounter === 3) {
+				console.log("Reached rate limit, pausing for 60 seconds...");
+				await new Promise((resolve) => setTimeout(resolve, 45000)); // Pause for 45 seconds
+				batchCounter = 0; // Reset the batch counter after pausing
+			}
+
+			// if (responses.length < 45) {
+			startIndex = endIndex;
+			endIndex = Math.min(
+				startIndex + batchSize,
+				updatedAirtableProfiles.length
+			);
+			// }
+		}
+
+		console.log(
+			responses.length,
+			"Directories Updated/Created in Webflow CMS:"
+		);
+
+		return responses;
+	} catch (error) {
+		console.log(error);
+		return [];
+	} finally {
+		afterFunc();
+	}
+};
+
+const languagesSyncFunc = async (lastCheckedDate, afterFunc = () => {}) => {
+	try {
+		const updatedAirtableProfiles =
+			await fetchRecentlyUpdatedServicesFromAirtable(
+				lastCheckedDate,
+				process.env.AIRTABLE_LANGUAGES_TABLE_ID,
+				"Live%20View"
+			);
+		const allWebflowCMSRecords = await fetchAllWebflowCMSRecords(
+			process.env.WEBFLOW_LANGUAGES_COLLECTION_ID
+		);
+
+		console.log(updatedAirtableProfiles.length, "Updated Directories Found.");
+		if (updatedAirtableProfiles.length === 0) {
+			console.log("No updated Directories found in Airtable.");
+			return [];
+		}
+
+		const batchSize = 15;
+		let startIndex = 0;
+		let endIndex = Math.min(batchSize, updatedAirtableProfiles.length);
+		let batchCounter = 0;
+
+		const responses = [];
+
+		while (startIndex < updatedAirtableProfiles.length) {
+			const batchAirtableProfiles = updatedAirtableProfiles.slice(
+				startIndex,
+				endIndex
+			);
+			console.log("startIndex", startIndex, "endIndex", endIndex);
+
+			const webflowUpdatePromises = batchAirtableProfiles.map(
+				async (airtableProfile) => {
+					let response;
+					const webflowProfile = allWebflowCMSRecords.find(
+						(webflowProfile) =>
+							webflowProfile.fieldData.slug ===
+							airtableProfile.fields["Language Code"]
+					);
+
+					if (webflowProfile) {
+						response = await updateWebflowCMSItem(
+							process.env.WEBFLOW_LANGUAGES_COLLECTION_ID,
+							webflowProfile?.id,
+							{
+								fieldData: {
+									name: airtableProfile.fields["Language"],
+									slug: airtableProfile.fields["Language Code"]?.trim(),
+								},
+							}
+						);
+						console.log(
+							`Updating Webflow CMS record with ID ${airtableProfile.fields["Language"]} ${airtableProfile.fields["Language Code"]} ...`
+						);
+						console.log("Not today...");
+					} else {
+						response = await addItemToWebflowCMS(
+							process.env.WEBFLOW_LANGUAGES_COLLECTION_ID,
+							{
+								fieldData: {
+									name: airtableProfile.fields["Language"],
+									slug: airtableProfile.fields["Language Code"]?.trim(),
+								},
+							}
+						);
+						console.log(
+							`Creating a new Webflow CMS record for ${airtableProfile.fields["Language"]} ${airtableProfile.fields["Language Code"]} ...`
+						);
+					}
+
+					return response;
+				}
+			);
+
+			const batchResponses = await Promise.all(webflowUpdatePromises);
+			responses.push(...batchResponses);
+
+			batchCounter++;
+			if (batchCounter === 3) {
+				console.log("Reached rate limit, pausing for 60 seconds...");
+				await new Promise((resolve) => setTimeout(resolve, 45000)); // Pause for 45 seconds
+				batchCounter = 0; // Reset the batch counter after pausing
+			}
+
+			// if (responses.length < 45) {
+			startIndex = endIndex;
+			endIndex = Math.min(
+				startIndex + batchSize,
+				updatedAirtableProfiles.length
+			);
+			// }
+		}
+
+		console.log(
+			responses.length,
+			"Directories Updated/Created in Webflow CMS:"
+		);
+
+		return responses;
+	} catch (error) {
+		console.log(error);
+		return [];
+	} finally {
+		afterFunc();
 	}
 };
 
@@ -609,7 +986,9 @@ const addWebflowIdToAirtableRecordsSyncFunc = async (lastCheckedDate) => {
 	try {
 		const updatedAirtableProfiles =
 			await fetchRecentlyUpdatedProfilesFromAirtable(lastCheckedDate);
-		const allWebflowCMSRecords = await fetchAllWebflowCMSRecords();
+		const allWebflowCMSRecords = await fetchAllWebflowCMSRecords(
+			process.env.WEBFLOW_VENDOR_COLLECTION_ID
+		);
 
 		if (updatedAirtableProfiles.length === 0) {
 			console.log("No updated profiles found in Airtable.");
@@ -681,9 +1060,95 @@ const addWebflowIdToAirtableRecordsSyncFunc = async (lastCheckedDate) => {
 	}
 };
 
+const addWebflowIdToAirtableDisciplinesSyncFunc = async (lastCheckedDate) => {
+	try {
+		const updatedAirtableProfiles =
+			await fetchRecentlyUpdatedServicesFromAirtable(
+				lastCheckedDate,
+				process.env.AIRTABLE_DISCIPLINES_TABLE_ID
+				// "Live%20View"
+			);
+		const allWebflowCMSRecords = await fetchAllWebflowCMSRecords(
+			process.env.WEBFLOW_DISCIPLINE_COLLECTION_ID
+		);
+
+		if (updatedAirtableProfiles.length === 0) {
+			console.log("No updated profiles found in Airtable.");
+			return [];
+		}
+
+		const batchSize = 15;
+		let startIndex = 0;
+		let endIndex = Math.min(batchSize, updatedAirtableProfiles.length);
+
+		const responses = [];
+
+		while (startIndex < updatedAirtableProfiles.length) {
+			const batchAirtableProfiles = updatedAirtableProfiles.slice(
+				startIndex,
+				endIndex
+			);
+
+			const webflowUpdatePromises = batchAirtableProfiles.map(
+				async (airtableProfile) => {
+					let response;
+					const webflowProfile = allWebflowCMSRecords.find(
+						(webflowProfile) =>
+							webflowProfile.fieldData.slug ===
+							airtableProfile.fields["discipline_id"]
+					);
+
+					if (webflowProfile) {
+						response = await modifyAirtableRecord(
+							process.env.AIRTABLE_DISCIPLINES_TABLE_ID,
+							airtableProfile.id,
+							{
+								fields: {
+									"Webflow ID": webflowProfile.id,
+								},
+							}
+						);
+
+						console.log(
+							`Updating Webflow CMS record with ID ${webflowProfile.id} ${webflowProfile?.fieldData?.name}...`
+						);
+						// console.log("Not today...");
+					} else {
+						console.log(`No matching profile found in Webflow CMS.`);
+					}
+
+					return response;
+				}
+			);
+
+			const batchResponses = await Promise.all(webflowUpdatePromises);
+			responses.push(...batchResponses);
+
+			// if (responses.length < 45) {
+			startIndex = endIndex;
+			endIndex = Math.min(
+				startIndex + batchSize,
+				updatedAirtableProfiles.length
+			);
+			// }
+		}
+
+		console.log(responses.length, "Webflow IDs Added to Airtable:");
+
+		return responses;
+	} catch (error) {
+		console.log(error);
+		return [];
+	}
+};
+
 module.exports = {
 	profileSyncFunc,
 	directoryByLocationSyncFunc,
 	directoryByServiceSyncFunc,
 	addWebflowIdToAirtableRecordsSyncFunc,
+	serviceSyncFunc,
+	disciplineSyncFunc,
+	languagesSyncFunc,
+	addWebflowIdToAirtableDisciplinesSyncFunc,
 };
