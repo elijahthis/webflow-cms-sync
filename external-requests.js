@@ -256,6 +256,38 @@ const fetchSingleProfileFromAirtable = async (recordId, res) => {
 	return response?.data;
 };
 
+const publishWebflowCMSItems = async (
+	collectionID,
+	WEBFLOW_TOKEN,
+	payload,
+	res
+) => {
+	try {
+		// Make a request to Webflow CMS API to update data
+		const response = await axios.post(
+			`https://api.webflow.com/v2/collections/${collectionID}/items/publish`,
+			payload,
+			{
+				headers: {
+					Authorization: `Bearer ${WEBFLOW_TOKEN}`,
+				},
+			}
+		);
+
+		return response.data;
+	} catch (error) {
+		// console.error("Error updating Webflow CMS:", error);
+		// throw new Error("Failed to update Webflow CMS", error);
+		if (res)
+			res.status(error.status || 500).json({
+				error: "Failed to publish Webflow CMS",
+				payload,
+				error,
+				errorData: error?.response?.data,
+			});
+	}
+};
+
 // ------------------------------------------------- //
 const fetchRecentlyUpdatedDirectoriesFromAirtable = async (
 	lastCheckedDate,
@@ -445,4 +477,5 @@ module.exports = {
 	fetchSingleDirectoryProfileFromAirtable,
 	modifyAirtableRecord,
 	fetchRecentlyUpdatedServicesFromAirtable,
+	publishWebflowCMSItems,
 };

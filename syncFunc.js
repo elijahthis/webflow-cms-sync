@@ -9,6 +9,7 @@ const {
 	fetchRecentlyUpdatedDirectoriesFromAirtable,
 	modifyAirtableRecord,
 	fetchRecentlyUpdatedServicesFromAirtable,
+	publishWebflowCMSItems,
 } = require("./external-requests");
 const { generateRealIndex, executeWithTiming } = require("./helpers");
 
@@ -225,20 +226,29 @@ const profileSyncFunc = async (lastCheckedDate, afterFunc = () => {}) => {
 			const batchResponses = await Promise.all(webflowUpdatePromises);
 			responses.push(...batchResponses);
 
-			batchCounter++;
-			if (batchCounter === 3) {
-				console.log("Reached rate limit, pausing for 60 seconds...");
-				await new Promise((resolve) => setTimeout(resolve, 45000)); // Pause for 45 seconds
-				batchCounter = 0; // Reset the batch counter after pausing
-			}
-
-			// if (responses.length < 45) {
-			startIndex = endIndex;
-			endIndex = Math.min(
-				startIndex + batchSize,
-				updatedAirtableProfiles.length
+			const publish = await publishWebflowCMSItems(
+				process.env.WEBFLOW_VENDOR_COLLECTION_ID,
+				process.env.WEBFLOW_TOKEN_1,
+				{ itemIds: batchResponses.map((response) => response.id) }
 			);
-			// }
+
+			if (publish) {
+				console.log("Batch Published Successfully!");
+				console.log("publish", publish);
+
+				batchCounter++;
+				if (batchCounter === 3) {
+					console.log("Reached rate limit, pausing for 60 seconds...");
+					await new Promise((resolve) => setTimeout(resolve, 45000)); // Pause for 45 seconds
+					batchCounter = 0; // Reset the batch counter after pausing
+				}
+
+				startIndex = endIndex;
+				endIndex = Math.min(
+					startIndex + batchSize,
+					updatedAirtableProfiles.length
+				);
+			}
 		}
 
 		console.log(responses.length, "Profiles Updated/Created in Webflow CMS:");
@@ -427,20 +437,28 @@ const directoryByLocationSyncFunc = async (
 			const batchResponses = await Promise.all(webflowUpdatePromises);
 			responses.push(...batchResponses);
 
-			batchCounter++;
-			if (batchCounter === 3) {
-				console.log("Reached rate limit, pausing for 60 seconds...");
-				await new Promise((resolve) => setTimeout(resolve, 45000)); // Pause for 45 seconds
-				batchCounter = 0; // Reset the batch counter after pausing
-			}
-
-			// if (responses.length < 45) {
-			startIndex = endIndex;
-			endIndex = Math.min(
-				startIndex + batchSize,
-				updatedAirtableProfiles.length
+			const publish = await publishWebflowCMSItems(
+				process.env.WEBFLOW_DIRECTORY_COLLECTION_ID,
+				process.env.WEBFLOW_TOKEN_2,
+				{ itemIds: batchResponses.map((response) => response.id) }
 			);
-			// }
+
+			if (publish) {
+				console.log("Batch Published Successfully!");
+
+				batchCounter++;
+				if (batchCounter === 3) {
+					console.log("Reached rate limit, pausing for 60 seconds...");
+					await new Promise((resolve) => setTimeout(resolve, 45000)); // Pause for 45 seconds
+					batchCounter = 0; // Reset the batch counter after pausing
+				}
+
+				startIndex = endIndex;
+				endIndex = Math.min(
+					startIndex + batchSize,
+					updatedAirtableProfiles.length
+				);
+			}
 		}
 
 		console.log(
@@ -632,20 +650,28 @@ const directoryByServiceSyncFunc = async (
 			const batchResponses = await Promise.all(webflowUpdatePromises);
 			responses.push(...batchResponses);
 
-			batchCounter++;
-			if (batchCounter === 3) {
-				console.log("Reached rate limit, pausing for 60 seconds...");
-				await new Promise((resolve) => setTimeout(resolve, 45000)); // Pause for 45 seconds
-				batchCounter = 0; // Reset the batch counter after pausing
-			}
-
-			// if (responses.length < 45) {
-			startIndex = endIndex;
-			endIndex = Math.min(
-				startIndex + batchSize,
-				updatedAirtableProfiles.length
+			const publish = await publishWebflowCMSItems(
+				process.env.WEBFLOW_DIRECTORY_COLLECTION_ID,
+				process.env.WEBFLOW_TOKEN_3,
+				{ itemIds: batchResponses.map((response) => response.id) }
 			);
-			// }
+
+			if (publish) {
+				console.log("Batch Published Successfully!");
+
+				batchCounter++;
+				if (batchCounter === 3) {
+					console.log("Reached rate limit, pausing for 60 seconds...");
+					await new Promise((resolve) => setTimeout(resolve, 45000)); // Pause for 45 seconds
+					batchCounter = 0; // Reset the batch counter after pausing
+				}
+
+				startIndex = endIndex;
+				endIndex = Math.min(
+					startIndex + batchSize,
+					updatedAirtableProfiles.length
+				);
+			}
 		}
 
 		console.log(
@@ -745,20 +771,28 @@ const serviceSyncFunc = async (lastCheckedDate, afterFunc = () => {}) => {
 			const batchResponses = await Promise.all(webflowUpdatePromises);
 			responses.push(...batchResponses);
 
-			batchCounter++;
-			if (batchCounter === 3) {
-				console.log("Reached rate limit, pausing for 60 seconds...");
-				await new Promise((resolve) => setTimeout(resolve, 45000)); // Pause for 45 seconds
-				batchCounter = 0; // Reset the batch counter after pausing
-			}
-
-			// if (responses.length < 45) {
-			startIndex = endIndex;
-			endIndex = Math.min(
-				startIndex + batchSize,
-				updatedAirtableProfiles.length
+			const publish = await publishWebflowCMSItems(
+				process.env.WEBFLOW_SERVICE_COLLECTION_ID,
+				process.env.WEBFLOW_TOKEN_4,
+				{ itemIds: batchResponses.map((response) => response.id) }
 			);
-			// }
+
+			if (publish) {
+				console.log("Batch Published Successfully!");
+
+				batchCounter++;
+				if (batchCounter === 3) {
+					console.log("Reached rate limit, pausing for 60 seconds...");
+					await new Promise((resolve) => setTimeout(resolve, 45000)); // Pause for 45 seconds
+					batchCounter = 0; // Reset the batch counter after pausing
+				}
+
+				startIndex = endIndex;
+				endIndex = Math.min(
+					startIndex + batchSize,
+					updatedAirtableProfiles.length
+				);
+			}
 		}
 
 		console.log(
@@ -854,20 +888,28 @@ const disciplineSyncFunc = async (lastCheckedDate, afterFunc = () => {}) => {
 			const batchResponses = await Promise.all(webflowUpdatePromises);
 			responses.push(...batchResponses);
 
-			batchCounter++;
-			if (batchCounter === 3) {
-				console.log("Reached rate limit, pausing for 60 seconds...");
-				await new Promise((resolve) => setTimeout(resolve, 45000)); // Pause for 45 seconds
-				batchCounter = 0; // Reset the batch counter after pausing
-			}
-
-			// if (responses.length < 45) {
-			startIndex = endIndex;
-			endIndex = Math.min(
-				startIndex + batchSize,
-				updatedAirtableProfiles.length
+			const publish = await publishWebflowCMSItems(
+				process.env.WEBFLOW_DISCIPLINE_COLLECTION_ID,
+				process.env.WEBFLOW_TOKEN_1,
+				{ itemIds: batchResponses.map((response) => response.id) }
 			);
-			// }
+
+			if (publish) {
+				console.log("Batch Published Successfully!");
+
+				batchCounter++;
+				if (batchCounter === 3) {
+					console.log("Reached rate limit, pausing for 60 seconds...");
+					await new Promise((resolve) => setTimeout(resolve, 45000)); // Pause for 45 seconds
+					batchCounter = 0; // Reset the batch counter after pausing
+				}
+
+				startIndex = endIndex;
+				endIndex = Math.min(
+					startIndex + batchSize,
+					updatedAirtableProfiles.length
+				);
+			}
 		}
 
 		console.log(
@@ -964,20 +1006,28 @@ const languagesSyncFunc = async (lastCheckedDate, afterFunc = () => {}) => {
 			const batchResponses = await Promise.all(webflowUpdatePromises);
 			responses.push(...batchResponses);
 
-			batchCounter++;
-			if (batchCounter === 3) {
-				console.log("Reached rate limit, pausing for 60 seconds...");
-				await new Promise((resolve) => setTimeout(resolve, 45000)); // Pause for 45 seconds
-				batchCounter = 0; // Reset the batch counter after pausing
-			}
-
-			// if (responses.length < 45) {
-			startIndex = endIndex;
-			endIndex = Math.min(
-				startIndex + batchSize,
-				updatedAirtableProfiles.length
+			const publish = await publishWebflowCMSItems(
+				process.env.WEBFLOW_LANGUAGES_COLLECTION_ID,
+				process.env.WEBFLOW_TOKEN_2,
+				{ itemIds: batchResponses.map((response) => response.id) }
 			);
-			// }
+
+			if (publish) {
+				console.log("Batch Published Successfully!");
+
+				batchCounter++;
+				if (batchCounter === 3) {
+					console.log("Reached rate limit, pausing for 60 seconds...");
+					await new Promise((resolve) => setTimeout(resolve, 45000)); // Pause for 45 seconds
+					batchCounter = 0; // Reset the batch counter after pausing
+				}
+
+				startIndex = endIndex;
+				endIndex = Math.min(
+					startIndex + batchSize,
+					updatedAirtableProfiles.length
+				);
+			}
 		}
 
 		console.log(
