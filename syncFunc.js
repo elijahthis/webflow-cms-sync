@@ -1204,6 +1204,88 @@ const addWebflowIdToAirtableDisciplinesSyncFunc = async (lastCheckedDate) => {
 	}
 };
 
+const addWebflowIdToAirtableServicesSyncFunc = async (lastCheckedDate) => {
+	try {
+		const updatedAirtableProfiles =
+			await fetchRecentlyUpdatedServicesFromAirtable(
+				lastCheckedDate,
+				process.env.AIRTABLE_SERVICE_TABLE_ID
+				// "Live%20View"
+			);
+		const allWebflowCMSRecords = await fetchAllWebflowCMSRecords(
+			process.env.WEBFLOW_SERVICE_COLLECTION_ID
+		);
+
+		if (updatedAirtableProfiles.length === 0) {
+			console.log("No updated services found in Airtable.");
+			return [];
+		}
+
+		const batchSize = 15;
+		let startIndex = 0;
+		let endIndex = Math.min(batchSize, updatedAirtableProfiles.length);
+
+		const responses = [];
+
+		while (startIndex < updatedAirtableProfiles.length) {
+			const batchAirtableProfiles = updatedAirtableProfiles.slice(
+				startIndex,
+				endIndex
+			);
+
+			const webflowUpdatePromises = batchAirtableProfiles.map(
+				async (airtableProfile) => {
+					let response;
+					const webflowProfile = allWebflowCMSRecords.find(
+						(webflowProfile) =>
+							webflowProfile.fieldData.slug ===
+							airtableProfile.fields["service_id"]
+					);
+
+					if (webflowProfile) {
+						response = await modifyAirtableRecord(
+							process.env.AIRTABLE_SERVICE_TABLE_ID,
+							airtableProfile.id,
+							{
+								fields: {
+									"Webflow ID": webflowProfile.id,
+								},
+							}
+						);
+
+						console.log(
+							`Updating Webflow CMS record with ID ${webflowProfile.id} ${webflowProfile?.fieldData?.name}...`
+						);
+						// console.log("Not today...");
+					} else {
+						console.log(`No matching service found in Webflow CMS.`);
+					}
+
+					return response;
+				}
+			);
+
+			const batchResponses = await Promise.all(webflowUpdatePromises);
+			responses.push(...batchResponses);
+
+			// if (responses.length < 45) {
+			startIndex = endIndex;
+			endIndex = Math.min(
+				startIndex + batchSize,
+				updatedAirtableProfiles.length
+			);
+			// }
+		}
+
+		console.log(responses.length, "Webflow IDs Added to Airtable:");
+
+		return responses;
+	} catch (error) {
+		console.log(error);
+		return [];
+	}
+};
+
 module.exports = {
 	profileSyncFunc,
 	directoryByLocationSyncFunc,
@@ -1213,4 +1295,5 @@ module.exports = {
 	disciplineSyncFunc,
 	languagesSyncFunc,
 	addWebflowIdToAirtableDisciplinesSyncFunc,
+	addWebflowIdToAirtableServicesSyncFunc,
 };

@@ -13,6 +13,7 @@ const {
 	disciplineSyncFunc,
 	languagesSyncFunc,
 	addWebflowIdToAirtableDisciplinesSyncFunc,
+	addWebflowIdToAirtableServicesSyncFunc,
 } = require("./syncFunc");
 const {
 	fetchRecentlyUpdatedProfilesFromAirtable,
@@ -60,6 +61,10 @@ const state = {
 		lastCheckedDate: new Date("01-01-1970").toISOString(),
 	},
 	webflow_ID_disciplines: {
+		isJobRunning: false,
+		lastCheckedDate: new Date("01-01-1970").toISOString(),
+	},
+	webflow_ID_services: {
 		isJobRunning: false,
 		lastCheckedDate: new Date("01-01-1970").toISOString(),
 	},
@@ -346,6 +351,10 @@ cron.schedule("*/90 * * * * *", async () => {
 	);
 });
 
+// Schedule polling every 120 seconds --- webflow_ID_services
+cron.schedule("*/90 * * * * *", async () => {
+	cronWrapper(addWebflowIdToAirtableServicesSyncFunc, "webflow_ID_services");
+});
 // Start the server
 app.listen(port, () => {
 	console.log(`Server is running on http://localhost:${port}`);
