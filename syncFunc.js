@@ -859,7 +859,7 @@ const disciplineSyncFunc = async (lastCheckedDate, afterFunc = () => {}) => {
 									name: airtableProfile.fields["Name"],
 									slug: airtableProfile.fields["discipline_id"]?.trim(),
 									services:
-										airtableProfile.fields["Webflow ID"],
+										airtableProfile.fields["Webflow ID (from Services)"],
 								},
 							}
 						);
@@ -875,6 +875,8 @@ const disciplineSyncFunc = async (lastCheckedDate, afterFunc = () => {}) => {
 								fieldData: {
 									name: airtableProfile.fields["Name"],
 									slug: airtableProfile.fields["discipline_id"]?.trim(),
+									services:
+										airtableProfile.fields["Webflow ID (from Services)"],
 								},
 							}
 						);
