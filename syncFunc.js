@@ -238,10 +238,14 @@ const profileSyncFunc = async (lastCheckedDate, afterFunc = () => {}) => {
 			const batchResponses = await Promise.all(webflowUpdatePromises);
 			responses.push(...batchResponses);
 
+			console.log(
+				"ids",
+				batchResponses.map((response) => response?.id)
+			);
 			const publish = await publishWebflowCMSItems(
 				process.env.WEBFLOW_VENDOR_COLLECTION_ID,
 				process.env.WEBFLOW_TOKEN_1,
-				{ itemIds: batchResponses.map((response) => response.id) }
+				{ itemIds: batchResponses.map((response) => response?.id) }
 			);
 
 			if (publish) {
@@ -344,7 +348,7 @@ const directoryByCitySyncFunc = async (
 			// );
 
 			const webflowUpdatePromises = batchAirtableProfiles.map(
-				async (airtableProfile) => {
+				async (airtableProfile, index_1) => {
 					let response;
 					const webflowProfile = allWebflowCMSRecords.find(
 						(webflowProfile) =>
@@ -404,7 +408,7 @@ const directoryByCitySyncFunc = async (
 						);
 						console.log(
 							"\x1b[32m%s\x1b[0m",
-							`Updating Webflow CMS record with ID ${webflowProfile.id} ${webflowProfile?.fieldData?.name}...`
+							`${index_1}: Updating Webflow CMS record with ID ${webflowProfile.id} ${webflowProfile?.fieldData?.name}...`
 						);
 					} else {
 						const vendorObjList = airtableProfile.fields?.[
@@ -459,7 +463,7 @@ const directoryByCitySyncFunc = async (
 						);
 						console.log(
 							"\x1b[32m%s\x1b[0m",
-							`Creating a new Webflow CMS record for ${airtableProfile.fields["H1 Title Text"]} ${airtableProfile.fields["Slug"]} ...`
+							`${index_1}: Creating a new Webflow CMS record for ${airtableProfile.fields["H1 Title Text"]} ${airtableProfile.fields["Slug"]} ...`
 						);
 					}
 
@@ -470,10 +474,14 @@ const directoryByCitySyncFunc = async (
 			const batchResponses = await Promise.all(webflowUpdatePromises);
 			responses.push(...batchResponses);
 
+			console.log(
+				"ids",
+				batchResponses.map((response) => response?.id)
+			);
 			const publish = await publishWebflowCMSItems(
 				process.env.WEBFLOW_DIRECTORY_COLLECTION_ID,
 				process.env.WEBFLOW_TOKEN_2,
-				{ itemIds: batchResponses.map((response) => response.id) }
+				{ itemIds: batchResponses.map((response) => response?.id) }
 			);
 
 			if (publish) {
@@ -575,7 +583,7 @@ const directoryByCountrySyncFunc = async (
 			// );
 
 			const webflowUpdatePromises = batchAirtableProfiles.map(
-				async (airtableProfile) => {
+				async (airtableProfile, index_1) => {
 					let response;
 					const webflowProfile = allWebflowCMSRecords.find(
 						(webflowProfile) =>
@@ -636,7 +644,7 @@ const directoryByCountrySyncFunc = async (
 						);
 						console.log(
 							"\x1b[34m%s\x1b[0m",
-							`Updating Webflow CMS record with ID ${webflowProfile.id} ${webflowProfile?.fieldData?.name}...`
+							`${index_1}: Updating Webflow CMS record with ID ${webflowProfile.id} ${webflowProfile?.fieldData?.name}...`
 						);
 						// console.log("Not today...");
 					} else {
@@ -692,7 +700,7 @@ const directoryByCountrySyncFunc = async (
 						);
 						console.log(
 							"\x1b[34m%s\x1b[0m",
-							`Creating a new Webflow CMS record for ${airtableProfile.fields["H1 Title Text"]} ${airtableProfile.fields["Slug"]} ...`
+							`${index_1}: Creating a new Webflow CMS record for ${airtableProfile.fields["H1 Title Text"]} ${airtableProfile.fields["Slug"]} ...`
 						);
 					}
 
@@ -703,10 +711,14 @@ const directoryByCountrySyncFunc = async (
 			const batchResponses = await Promise.all(webflowUpdatePromises);
 			responses.push(...batchResponses);
 
+			console.log(
+				"ids",
+				batchResponses.map((response) => response?.id)
+			);
 			const publish = await publishWebflowCMSItems(
 				process.env.WEBFLOW_DIRECTORY_COLLECTION_ID,
 				process.env.WEBFLOW_TOKEN_3,
-				{ itemIds: batchResponses.map((response) => response.id) }
+				{ itemIds: batchResponses.map((response) => response?.id) }
 			);
 
 			if (publish) {
@@ -808,7 +820,7 @@ const directoryByServiceSyncFunc = async (
 			// );
 
 			const webflowUpdatePromises = batchAirtableProfiles.map(
-				async (airtableProfile) => {
+				async (airtableProfile, index_1) => {
 					let response;
 					const webflowProfile = allWebflowCMSRecords.find(
 						(webflowProfile) =>
@@ -869,9 +881,9 @@ const directoryByServiceSyncFunc = async (
 						);
 						console.log(
 							"\x1b[91m%s\x1b[0m",
-							`Updating Webflow CMS record with ID ${webflowProfile.id} ${webflowProfile?.fieldData?.name}...`
+							`${index_1}: Updating Webflow CMS record with ID ${webflowProfile.id} ${webflowProfile?.fieldData?.name}...`
 						);
-						console.log("\x1b[91m%s\x1b[0m", "Not today...");
+						// console.log("\x1b[91m%s\x1b[0m", "Not today...");
 					} else {
 						const vendorObjList = airtableProfile.fields?.[
 							"Webflow ID (from Profiles) (from Disciplines)"
@@ -925,7 +937,7 @@ const directoryByServiceSyncFunc = async (
 						);
 						console.log(
 							"\x1b[91m%s\x1b[0m",
-							`Creating a new Webflow CMS record for ${airtableProfile.fields["H1 Title Text"]} ${airtableProfile.fields["Slug"]} ...`
+							`${index_1}: Creating a new Webflow CMS record for ${airtableProfile.fields["H1 Title Text"]} ${airtableProfile.fields["Slug"]} ...`
 						);
 					}
 
@@ -936,10 +948,15 @@ const directoryByServiceSyncFunc = async (
 			const batchResponses = await Promise.all(webflowUpdatePromises);
 			responses.push(...batchResponses);
 
+			console.log(
+				"\x1b[91m%s\x1b[0m",
+				"ids",
+				batchResponses.map((response) => response?.id)
+			);
 			const publish = await publishWebflowCMSItems(
 				process.env.WEBFLOW_DIRECTORY_COLLECTION_ID,
 				process.env.WEBFLOW_TOKEN_3,
-				{ itemIds: batchResponses.map((response) => response.id) }
+				{ itemIds: batchResponses.map((response) => response?.id) }
 			);
 
 			if (publish) {
@@ -1271,6 +1288,7 @@ const disciplineSyncFunc = async (lastCheckedDate, afterFunc = () => {}) => {
 	}
 };
 
+// Pink color for console logs -- \x1b[38;2;255;192;203m%s\x1b[0m
 const languagesSyncFunc = async (lastCheckedDate, afterFunc = () => {}) => {
 	try {
 		const updatedAirtableProfiles =
@@ -1283,9 +1301,16 @@ const languagesSyncFunc = async (lastCheckedDate, afterFunc = () => {}) => {
 			process.env.WEBFLOW_LANGUAGES_COLLECTION_ID
 		);
 
-		console.log(updatedAirtableProfiles.length, "Updated Directories Found.");
+		console.log(
+			"\x1b[38;2;255;192;203m%s\x1b[0m",
+			updatedAirtableProfiles.length,
+			"Updated Directories Found."
+		);
 		if (updatedAirtableProfiles.length === 0) {
-			console.log("No updated Directories found in Airtable.");
+			console.log(
+				"\x1b[38;2;255;192;203m%s\x1b[0m",
+				"No updated Directories found in Airtable."
+			);
 			return [];
 		}
 
@@ -1301,7 +1326,13 @@ const languagesSyncFunc = async (lastCheckedDate, afterFunc = () => {}) => {
 				startIndex,
 				endIndex
 			);
-			console.log("startIndex", startIndex, "endIndex", endIndex);
+			console.log(
+				"\x1b[38;2;255;192;203m%s\x1b[0m",
+				"startIndex",
+				startIndex,
+				"endIndex",
+				endIndex
+			);
 
 			const webflowUpdatePromises = batchAirtableProfiles.map(
 				async (airtableProfile) => {
@@ -1325,9 +1356,10 @@ const languagesSyncFunc = async (lastCheckedDate, afterFunc = () => {}) => {
 							}
 						);
 						console.log(
+							"\x1b[38;2;255;192;203m%s\x1b[0m",
 							`Updating Webflow CMS record with ID ${airtableProfile.fields["Language"]} ${airtableProfile.fields["Language Code"]} ...`
 						);
-						console.log("Not today...");
+						// console.log("Not today...");
 					} else {
 						response = await addItemToWebflowCMS(
 							process.env.WEBFLOW_LANGUAGES_COLLECTION_ID,
@@ -1340,6 +1372,7 @@ const languagesSyncFunc = async (lastCheckedDate, afterFunc = () => {}) => {
 							}
 						);
 						console.log(
+							"\x1b[38;2;255;192;203m%s\x1b[0m",
 							`Creating a new Webflow CMS record for ${airtableProfile.fields["Language"]} ${airtableProfile.fields["Language Code"]} ...`
 						);
 					}
@@ -1351,18 +1384,29 @@ const languagesSyncFunc = async (lastCheckedDate, afterFunc = () => {}) => {
 			const batchResponses = await Promise.all(webflowUpdatePromises);
 			responses.push(...batchResponses);
 
+			console.log(
+				"\x1b[38;2;255;192;203m%s\x1b[0m",
+				"ids",
+				batchResponses.map((response) => response?.id)
+			);
 			const publish = await publishWebflowCMSItems(
 				process.env.WEBFLOW_LANGUAGES_COLLECTION_ID,
 				process.env.WEBFLOW_TOKEN_2,
-				{ itemIds: batchResponses.map((response) => response.id) }
+				{ itemIds: batchResponses.map((response) => response?.id) }
 			);
 
 			if (publish) {
-				console.log("Batch Published Successfully!");
+				console.log(
+					"\x1b[38;2;255;192;203m%s\x1b[0m",
+					"Batch Published Successfully!"
+				);
 
 				batchCounter++;
 				if (batchCounter === 3) {
-					console.log("Reached rate limit, pausing for 60 seconds...");
+					console.log(
+						"\x1b[38;2;255;192;203m%s\x1b[0m",
+						"Reached rate limit, pausing for 60 seconds..."
+					);
 					await new Promise((resolve) => setTimeout(resolve, 45000)); // Pause for 45 seconds
 					batchCounter = 0; // Reset the batch counter after pausing
 				}
@@ -1376,19 +1420,21 @@ const languagesSyncFunc = async (lastCheckedDate, afterFunc = () => {}) => {
 		}
 
 		console.log(
+			"\x1b[38;2;255;192;203m%s\x1b[0m",
 			responses.length,
 			"Directories Updated/Created in Webflow CMS:"
 		);
 
 		return responses;
 	} catch (error) {
-		console.log(error);
+		console.log("\x1b[38;2;255;192;203m%s\x1b[0m", error);
 		return [];
 	} finally {
 		afterFunc();
 	}
 };
 
+// Orange color for console logs -- \x1b[38;2;255;165;0m%s\x1b[0m
 const addWebflowIdToAirtableRecordsSyncFunc = async (lastCheckedDate) => {
 	try {
 		const updatedAirtableProfiles =
@@ -1398,7 +1444,10 @@ const addWebflowIdToAirtableRecordsSyncFunc = async (lastCheckedDate) => {
 		);
 
 		if (updatedAirtableProfiles.length === 0) {
-			console.log("No updated profiles found in Airtable.");
+			console.log(
+				"\x1b[38;2;255;165;0m%s\x1b[0m",
+				"No updated profiles found in Airtable."
+			);
 			return [];
 		}
 
@@ -1435,11 +1484,15 @@ const addWebflowIdToAirtableRecordsSyncFunc = async (lastCheckedDate) => {
 						);
 
 						console.log(
+							"\x1b[38;2;255;165;0m%s\x1b[0m",
 							`Updating Webflow CMS record with ID ${webflowProfile.id} ${webflowProfile?.fieldData?.name}...`
 						);
 						// console.log("Not today...");
 					} else {
-						console.log(`No matching profile found in Webflow CMS.`);
+						console.log(
+							"\x1b[38;2;255;165;0m%s\x1b[0m",
+							`No matching profile found in Webflow CMS.`
+						);
 					}
 
 					return response;
@@ -1458,15 +1511,20 @@ const addWebflowIdToAirtableRecordsSyncFunc = async (lastCheckedDate) => {
 			// }
 		}
 
-		console.log(responses.length, "Webflow IDs Added to Airtable:");
+		console.log(
+			"\x1b[38;2;255;165;0m%s\x1b[0m",
+			responses.length,
+			"Webflow IDs Added to Airtable:"
+		);
 
 		return responses;
 	} catch (error) {
-		console.log(error);
+		console.log("\x1b[38;2;255;165;0m%s\x1b[0m", error);
 		return [];
 	}
 };
 
+// Indigo color for console logs -- \x1b[38;2;75;0;130m%s\x1b[0m
 const addWebflowIdToAirtableDisciplinesSyncFunc = async (lastCheckedDate) => {
 	try {
 		const updatedAirtableProfiles =
@@ -1480,7 +1538,10 @@ const addWebflowIdToAirtableDisciplinesSyncFunc = async (lastCheckedDate) => {
 		);
 
 		if (updatedAirtableProfiles.length === 0) {
-			console.log("No updated profiles found in Airtable.");
+			console.log(
+				"\x1b[38;2;75;0;130m%s\x1b[0m",
+				"No updated profiles found in Airtable."
+			);
 			return [];
 		}
 
@@ -1517,11 +1578,15 @@ const addWebflowIdToAirtableDisciplinesSyncFunc = async (lastCheckedDate) => {
 						);
 
 						console.log(
+							"\x1b[38;2;75;0;130m%s\x1b[0m",
 							`Updating Webflow CMS record with ID ${webflowProfile.id} ${webflowProfile?.fieldData?.name}...`
 						);
 						// console.log("Not today...");
 					} else {
-						console.log(`No matching profile found in Webflow CMS.`);
+						console.log(
+							"\x1b[38;2;75;0;130m%s\x1b[0m",
+							`No matching profile found in Webflow CMS.`
+						);
 					}
 
 					return response;
@@ -1540,15 +1605,20 @@ const addWebflowIdToAirtableDisciplinesSyncFunc = async (lastCheckedDate) => {
 			// }
 		}
 
-		console.log(responses.length, "Webflow IDs Added to Airtable:");
+		console.log(
+			"\x1b[38;2;75;0;130m%s\x1b[0m",
+			responses.length,
+			"Webflow IDs Added to Airtable:"
+		);
 
 		return responses;
 	} catch (error) {
-		console.log(error);
+		console.log("\x1b[38;2;75;0;130m%s\x1b[0m", error);
 		return [];
 	}
 };
 
+// Indigo color for console logs -- \x1b[38;2;228;197;158m%s\x1b[0m
 const addWebflowIdToAirtableServicesSyncFunc = async (lastCheckedDate) => {
 	try {
 		const updatedAirtableProfiles =
@@ -1562,7 +1632,10 @@ const addWebflowIdToAirtableServicesSyncFunc = async (lastCheckedDate) => {
 		);
 
 		if (updatedAirtableProfiles.length === 0) {
-			console.log("No updated services found in Airtable.");
+			console.log(
+				"\x1b[38;2;228;197;158m%s\x1b[0m",
+				"No updated services found in Airtable."
+			);
 			return [];
 		}
 
@@ -1599,11 +1672,15 @@ const addWebflowIdToAirtableServicesSyncFunc = async (lastCheckedDate) => {
 						);
 
 						console.log(
+							"\x1b[38;2;228;197;158m%s\x1b[0m",
 							`Updating Webflow CMS record with ID ${webflowProfile.id} ${webflowProfile?.fieldData?.name}...`
 						);
 						// console.log("Not today...");
 					} else {
-						console.log(`No matching service found in Webflow CMS.`);
+						console.log(
+							"\x1b[38;2;228;197;158m%s\x1b[0m",
+							`No matching service found in Webflow CMS.`
+						);
 					}
 
 					return response;
@@ -1622,11 +1699,15 @@ const addWebflowIdToAirtableServicesSyncFunc = async (lastCheckedDate) => {
 			// }
 		}
 
-		console.log(responses.length, "Webflow IDs Added to Airtable:");
+		console.log(
+			"\x1b[38;2;228;197;158m%s\x1b[0m",
+			responses.length,
+			"Webflow IDs Added to Airtable:"
+		);
 
 		return responses;
 	} catch (error) {
-		console.log(error);
+		console.log("\x1b[38;2;228;197;158m%s\x1b[0m", error);
 		return [];
 	}
 };
