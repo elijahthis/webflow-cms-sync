@@ -273,7 +273,7 @@ const profileSyncFunc = async (lastCheckedDate, afterFunc = () => {}) => {
 
 		return responses;
 	} catch (error) {
-		console.log(error);
+		console.log("\x1b[33m%s\x1b[0m", error);
 		return [];
 	} finally {
 		afterFunc();
@@ -505,7 +505,7 @@ const directoryByCitySyncFunc = async (
 
 		return responses;
 	} catch (error) {
-		console.log(error);
+		console.log("\x1b[32m%s\x1b[0m", error);
 		return [];
 	} finally {
 		afterFunc();
@@ -738,12 +738,13 @@ const directoryByCountrySyncFunc = async (
 
 		return responses;
 	} catch (error) {
-		console.log(error);
+		console.log("\x1b[34m%s\x1b[0m", error);
 		return [];
 	} finally {
 		afterFunc();
 	}
 };
+// Light red color for console logs
 const directoryByServiceSyncFunc = async (
 	lastCheckedDate,
 	afterFunc = () => {}
@@ -759,9 +760,16 @@ const directoryByServiceSyncFunc = async (
 			process.env.WEBFLOW_DIRECTORY_COLLECTION_ID
 		);
 
-		console.log(updatedAirtableProfiles.length, "Updated Directories Found.");
+		console.log(
+			"\x1b[91m%s\x1b[0m",
+			updatedAirtableProfiles.length,
+			"Updated Directories Found."
+		);
 		if (updatedAirtableProfiles.length === 0) {
-			console.log("No updated Directories found in Airtable.");
+			console.log(
+				"\x1b[91m%s\x1b[0m",
+				"No updated Directories found in Airtable."
+			);
 			return [];
 		}
 
@@ -777,7 +785,13 @@ const directoryByServiceSyncFunc = async (
 				startIndex,
 				endIndex
 			);
-			console.log("startIndex", startIndex, "endIndex", endIndex);
+			console.log(
+				"\x1b[91m%s\x1b[0m",
+				"startIndex",
+				startIndex,
+				"endIndex",
+				endIndex
+			);
 			// console.log(
 			// 	"Batch Airtable Profiles: ",
 			// 	batchAirtableProfiles.map((airtableProfile) => ({
@@ -854,9 +868,10 @@ const directoryByServiceSyncFunc = async (
 							}
 						);
 						console.log(
+							"\x1b[91m%s\x1b[0m",
 							`Updating Webflow CMS record with ID ${webflowProfile.id} ${webflowProfile?.fieldData?.name}...`
 						);
-						console.log("Not today...");
+						console.log("\x1b[91m%s\x1b[0m", "Not today...");
 					} else {
 						const vendorObjList = airtableProfile.fields?.[
 							"Webflow ID (from Profiles) (from Disciplines)"
@@ -909,6 +924,7 @@ const directoryByServiceSyncFunc = async (
 							}
 						);
 						console.log(
+							"\x1b[91m%s\x1b[0m",
 							`Creating a new Webflow CMS record for ${airtableProfile.fields["H1 Title Text"]} ${airtableProfile.fields["Slug"]} ...`
 						);
 					}
@@ -927,11 +943,14 @@ const directoryByServiceSyncFunc = async (
 			);
 
 			if (publish) {
-				console.log("Batch Published Successfully!");
+				console.log("\x1b[91m%s\x1b[0m", "Batch Published Successfully!");
 
 				batchCounter++;
 				if (batchCounter === 3) {
-					console.log("Reached rate limit, pausing for 60 seconds...");
+					console.log(
+						"\x1b[91m%s\x1b[0m",
+						"Reached rate limit, pausing for 60 seconds..."
+					);
 					await new Promise((resolve) => setTimeout(resolve, 45000)); // Pause for 45 seconds
 					batchCounter = 0; // Reset the batch counter after pausing
 				}
@@ -945,13 +964,14 @@ const directoryByServiceSyncFunc = async (
 		}
 
 		console.log(
+			"\x1b[91m%s\x1b[0m",
 			responses.length,
 			"Directories Updated/Created in Webflow CMS:"
 		);
 
 		return responses;
 	} catch (error) {
-		console.log(error);
+		console.log("\x1b[91m%s\x1b[0m", error);
 		return [];
 	} finally {
 		afterFunc();
