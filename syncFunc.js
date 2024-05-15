@@ -262,7 +262,7 @@ const profileSyncFunc = async (lastCheckedDate, afterFunc = () => {}) => {
 	}
 };
 
-const directoryByLocationSyncFunc = async (
+const directoryByCitySyncFunc = async (
 	lastCheckedDate,
 	afterFunc = () => {}
 ) => {
@@ -270,7 +270,7 @@ const directoryByLocationSyncFunc = async (
 		const updatedAirtableProfiles =
 			await fetchRecentlyUpdatedServicesFromAirtable(
 				lastCheckedDate,
-				process.env.AIRTABLE_DIRECTORY_BY_LOCATION_VENDOR_TABLE_ID,
+				process.env.AIRTABLE_DIRECTORY_BY_LOCATION_CITY_VENDOR_TABLE_ID,
 				"Live%20View"
 			);
 		const allWebflowCMSRecords = await fetchAllWebflowCMSRecords(
@@ -440,6 +440,219 @@ const directoryByLocationSyncFunc = async (
 			const publish = await publishWebflowCMSItems(
 				process.env.WEBFLOW_DIRECTORY_COLLECTION_ID,
 				process.env.WEBFLOW_TOKEN_2,
+				{ itemIds: batchResponses.map((response) => response.id) }
+			);
+
+			if (publish) {
+				console.log("Batch Published Successfully!");
+
+				batchCounter++;
+				if (batchCounter === 3) {
+					console.log("Reached rate limit, pausing for 60 seconds...");
+					await new Promise((resolve) => setTimeout(resolve, 45000)); // Pause for 45 seconds
+					batchCounter = 0; // Reset the batch counter after pausing
+				}
+
+				startIndex = endIndex;
+				endIndex = Math.min(
+					startIndex + batchSize,
+					updatedAirtableProfiles.length
+				);
+			}
+		}
+
+		console.log(
+			responses.length,
+			"Directories Updated/Created in Webflow CMS:"
+		);
+
+		return responses;
+	} catch (error) {
+		console.log(error);
+		return [];
+	} finally {
+		afterFunc();
+	}
+};
+const directoryByCountrySyncFunc = async (
+	lastCheckedDate,
+	afterFunc = () => {}
+) => {
+	try {
+		const updatedAirtableProfiles =
+			await fetchRecentlyUpdatedServicesFromAirtable(
+				lastCheckedDate,
+				process.env.AIRTABLE_DIRECTORY_BY_LOCATION_COUNTRY_VENDOR_TABLE_ID,
+				"Live%20View"
+			);
+		const allWebflowCMSRecords = await fetchAllWebflowCMSRecords(
+			process.env.WEBFLOW_DIRECTORY_COLLECTION_ID
+		);
+
+		console.log(updatedAirtableProfiles.length, "Updated Directories Found.");
+		if (updatedAirtableProfiles.length === 0) {
+			console.log("No updated Directories found in Airtable.");
+			return [];
+		}
+
+		const batchSize = 15;
+		let startIndex = 0;
+		let endIndex = Math.min(batchSize, updatedAirtableProfiles.length);
+		let batchCounter = 0;
+
+		const responses = [];
+
+		while (startIndex < updatedAirtableProfiles.length) {
+			const batchAirtableProfiles = updatedAirtableProfiles.slice(
+				startIndex,
+				endIndex
+			);
+			console.log("startIndex", startIndex, "endIndex", endIndex);
+			// console.log(
+			// 	"Batch Airtable Profiles: ",
+			// 	batchAirtableProfiles.map((airtableProfile) => ({
+			// 		name: airtableProfile.fields["H1 Title Text"],
+			// 		vendors: airtableProfile.fields?.[
+			// 			"Webflow ID (from Profiles) (from Disciplines)"
+			// 		]?.map(
+			// 			(item, index) =>
+			// 				airtableProfile.fields[
+			// 					"Vendor (from Profiles) (from Disciplines)"
+			// 				]?.[index]
+			// 		),
+			// 	}))
+			// );
+
+			const webflowUpdatePromises = batchAirtableProfiles.map(
+				async (airtableProfile) => {
+					let response;
+					const webflowProfile = allWebflowCMSRecords.find(
+						(webflowProfile) =>
+							webflowProfile.fieldData.slug === airtableProfile.fields["Slug"]
+					);
+
+					if (webflowProfile) {
+						const vendorObjList = airtableProfile.fields?.[
+							"Webflow ID (from Vendor) (from Address for Service) (from Cities) (from Country)"
+						]
+							? airtableProfile.fields?.[
+									"Webflow ID (from Vendor) (from Address for Service) (from Cities) (from Country)"
+							  ]
+									?.map((item, index) => ({
+										webflowID:
+											airtableProfile.fields[
+												"Webflow ID (from Vendor) (from Address for Service) (from Cities) (from Country)"
+											]?.[index],
+										vendor_rating:
+											airtableProfile.fields[
+												"Total Vendor Rating (from Vendor) (from Address for Service) (from Cities) (from Country)"
+											]?.[index],
+									}))
+									?.sort((a, b) => b.vendor_rating - a.vendor_rating)
+							: [];
+
+						response = await updateWebflowCMSItem(
+							process.env.WEBFLOW_DIRECTORY_COLLECTION_ID,
+							process.env.WEBFLOW_TOKEN_4,
+							webflowProfile?.id,
+							{
+								fieldData: {
+									name: airtableProfile.fields["H1 Title Text"],
+									slug: airtableProfile.fields["Slug"]?.trim(),
+									subheading: airtableProfile.fields["Hero Summary"],
+									"breadcrumb-text": airtableProfile.fields["Breadcrumb Title"],
+									"hero-tag-summary":
+										airtableProfile.fields["Hero Tag Summary"],
+									// city: airtableProfile.fields?.["city_ascii (from City)"]?.[0],
+									country: airtableProfile.fields?.["Country"]?.[0],
+									"featured-vendors":
+										vendorObjList?.length > 0
+											? vendorObjList
+													?.slice(0, 2)
+													?.map((item) => item?.webflowID)
+											: [],
+									vendors:
+										vendorObjList?.length > 2
+											? vendorObjList?.slice(2)?.map((item) => item?.webflowID)
+											: [],
+									"title-tag": airtableProfile.fields["Meta: Title"],
+									"meta-description":
+										airtableProfile.fields["Meta: Description"],
+									"page-body-copy":
+										airtableProfile.fields["Page Body Copy"] ?? "",
+								},
+							}
+						);
+						console.log(
+							`Updating Webflow CMS record with ID ${webflowProfile.id} ${webflowProfile?.fieldData?.name}...`
+						);
+						console.log("Not today...");
+					} else {
+						const vendorObjList = airtableProfile.fields?.[
+							"Webflow ID (from Vendor) (from Address for Service) (from Cities) (from Country)"
+						]
+							? airtableProfile.fields?.[
+									"Webflow ID (from Vendor) (from Address for Service) (from Cities) (from Country)"
+							  ]
+									?.map((item, index) => ({
+										webflowID:
+											airtableProfile.fields[
+												"Webflow ID (from Vendor) (from Address for Service) (from Cities) (from Country)"
+											]?.[index],
+										vendor_rating:
+											airtableProfile.fields[
+												"Total Vendor Rating (from Vendor) (from Address for Service) (from Cities) (from Country)"
+											]?.[index],
+									}))
+									?.sort((a, b) => b.vendor_rating - a.vendor_rating)
+							: [];
+
+						response = await addItemToWebflowCMS(
+							process.env.WEBFLOW_DIRECTORY_COLLECTION_ID,
+							process.env.WEBFLOW_TOKEN_4,
+							{
+								fieldData: {
+									name: airtableProfile.fields["H1 Title Text"],
+									slug: airtableProfile.fields["Slug"]?.trim(),
+									subheading: airtableProfile.fields["Hero Summary"],
+									"breadcrumb-text": airtableProfile.fields["Breadcrumb Title"],
+									"hero-tag-summary":
+										airtableProfile.fields["Hero Tag Summary"],
+									city: airtableProfile.fields?.["city_ascii (from City)"]?.[0],
+									country: airtableProfile.fields?.["Country"]?.[0],
+									"featured-vendors":
+										vendorObjList?.length > 0
+											? vendorObjList
+													?.slice(0, 2)
+													?.map((item) => item?.webflowID)
+											: [],
+									vendors:
+										vendorObjList?.length > 2
+											? vendorObjList?.slice(2)?.map((item) => item?.webflowID)
+											: [],
+									"title-tag": airtableProfile.fields["Meta: Title"],
+									"meta-description":
+										airtableProfile.fields["Meta: Description"],
+									"page-body-copy":
+										airtableProfile.fields["Page Body Copy"] ?? "",
+								},
+							}
+						);
+						console.log(
+							`Creating a new Webflow CMS record for ${airtableProfile.fields["H1 Title Text"]} ${airtableProfile.fields["Slug"]} ...`
+						);
+					}
+
+					return response;
+				}
+			);
+
+			const batchResponses = await Promise.all(webflowUpdatePromises);
+			responses.push(...batchResponses);
+
+			const publish = await publishWebflowCMSItems(
+				process.env.WEBFLOW_DIRECTORY_COLLECTION_ID,
+				process.env.WEBFLOW_TOKEN_3,
 				{ itemIds: batchResponses.map((response) => response.id) }
 			);
 
@@ -774,7 +987,7 @@ const serviceSyncFunc = async (lastCheckedDate, afterFunc = () => {}) => {
 			const publish = await publishWebflowCMSItems(
 				process.env.WEBFLOW_SERVICE_COLLECTION_ID,
 				process.env.WEBFLOW_TOKEN_4,
-				{ itemIds: batchResponses.map((response) => response.id) }
+				{ itemIds: batchResponses.map((response) => response?.id) }
 			);
 
 			if (publish) {
@@ -892,10 +1105,11 @@ const disciplineSyncFunc = async (lastCheckedDate, afterFunc = () => {}) => {
 			const batchResponses = await Promise.all(webflowUpdatePromises);
 			responses.push(...batchResponses);
 
+			console.log("batchResponses", batchResponses);
 			const publish = await publishWebflowCMSItems(
 				process.env.WEBFLOW_DISCIPLINE_COLLECTION_ID,
 				process.env.WEBFLOW_TOKEN_1,
-				{ itemIds: batchResponses.map((response) => response.id) }
+				{ itemIds: batchResponses.map((response) => response?.id) }
 			);
 
 			if (publish) {
@@ -1292,7 +1506,8 @@ const addWebflowIdToAirtableServicesSyncFunc = async (lastCheckedDate) => {
 
 module.exports = {
 	profileSyncFunc,
-	directoryByLocationSyncFunc,
+	directoryByCitySyncFunc,
+	directoryByCountrySyncFunc,
 	directoryByServiceSyncFunc,
 	addWebflowIdToAirtableRecordsSyncFunc,
 	serviceSyncFunc,

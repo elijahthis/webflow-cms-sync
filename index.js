@@ -6,7 +6,8 @@ const { executeWithTiming } = require("./helpers");
 const { cronSyncFunction, cronSyncFunction2 } = require("./cron");
 const {
 	profileSyncFunc,
-	directoryByLocationSyncFunc,
+	directoryByCitySyncFunc,
+	directoryByCountrySyncFunc,
 	directoryByServiceSyncFunc,
 	addWebflowIdToAirtableRecordsSyncFunc,
 	serviceSyncFunc,
@@ -40,7 +41,11 @@ const state = {
 		isJobRunning: false,
 		lastCheckedDate: new Date("01-01-1970").toISOString(),
 	},
-	location_directory: {
+	city_directory: {
+		isJobRunning: false,
+		lastCheckedDate: new Date("01-01-1970").toISOString(),
+	},
+	country_directory: {
 		isJobRunning: false,
 		lastCheckedDate: new Date("01-01-1970").toISOString(),
 	},
@@ -318,9 +323,14 @@ cron.schedule("*/90 * * * * *", async () => {
 	cronWrapper(addWebflowIdToAirtableRecordsSyncFunc, "webflow_ID_profiles");
 });
 
-// Schedule polling every 120 seconds --- location_directory
+// Schedule polling every 120 seconds --- city_directory
 cron.schedule("*/90 * * * * *", async () => {
-	cronWrapper(directoryByLocationSyncFunc, "location_directory");
+	cronWrapper(directoryByCitySyncFunc, "city_directory");
+});
+
+// Schedule polling every 120 seconds --- country_directory
+cron.schedule("*/90 * * * * *", async () => {
+	cronWrapper(directoryByCountrySyncFunc, "country_directory");
 });
 
 // Schedule polling every 120 seconds --- service_directory
