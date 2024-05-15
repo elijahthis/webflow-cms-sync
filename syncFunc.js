@@ -13,6 +13,7 @@ const {
 } = require("./external-requests");
 const { generateRealIndex, executeWithTiming } = require("./helpers");
 
+// Orange
 const profileSyncFunc = async (lastCheckedDate, afterFunc = () => {}) => {
 	try {
 		const updatedAirtableProfiles =
@@ -22,7 +23,7 @@ const profileSyncFunc = async (lastCheckedDate, afterFunc = () => {}) => {
 		);
 
 		if (updatedAirtableProfiles.length === 0) {
-			console.log("No updated profiles found in Airtable.");
+			console.log("No updated profiles found in Airtable.", "color: orange");
 			return [];
 		}
 

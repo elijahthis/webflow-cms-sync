@@ -368,4 +368,5 @@ cron.schedule("*/90 * * * * *", async () => {
 // Start the server
 app.listen(port, () => {
 	console.log(`Server is running on http://localhost:${port}`);
+	console.log("\x1b[33m%s\x1b[0m", "Yellow log message");
 });
