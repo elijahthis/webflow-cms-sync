@@ -365,8 +365,12 @@ cron.schedule("*/90 * * * * *", async () => {
 cron.schedule("*/90 * * * * *", async () => {
 	cronWrapper(addWebflowIdToAirtableServicesSyncFunc, "webflow_ID_services");
 });
+
 // Start the server
 app.listen(port, () => {
-	console.log(`Server is running on http://localhost:${port}`);
-	console.log("\x1b[33m%s\x1b[0m", "Yellow log message");
+	console.log(
+		"\x1b[33m%s\x1b[0m",
+		`Server is running on http://localhost:${port}`
+	);
+	// console.log("\x1b[33m%s\x1b[0m", "Yellow log message");
 });
