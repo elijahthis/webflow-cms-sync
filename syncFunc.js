@@ -263,6 +263,7 @@ const profileSyncFunc = async (lastCheckedDate, afterFunc = () => {}) => {
 			responses.push(...batchResponses);
 
 			console.log(
+				"\x1b[33m%s\x1b[0m",
 				"ids",
 				batchResponses.map((response) => response?.id)
 			);
@@ -311,8 +312,19 @@ const profileSyncFunc = async (lastCheckedDate, afterFunc = () => {}) => {
 const directorySyncFunc = async (lastCheckedDate, afterFunc = () => {}) => {
 	try {
 		await directoryByCitySyncFunc(lastCheckedDate);
+		console.log("Beginning 10-second break after directoryByCitySyncFunc");
+		await new Promise((resolve) => setTimeout(resolve, 10000)); // 10-second break
+		//--------------------------- --------------------------- ---------------------------
+
 		await directoryByCountrySyncFunc(lastCheckedDate);
+		console.log("Beginning 10-second break after directoryByCountrySyncFunc");
+		await new Promise((resolve) => setTimeout(resolve, 10000)); // 10-second break
+		//--------------------------- --------------------------- ---------------------------
+
 		await directoryByServiceSyncFunc(lastCheckedDate, afterFunc);
+		console.log("Beginning 10-second break after directoryByServiceSyncFunc");
+		await new Promise((resolve) => setTimeout(resolve, 10000)); // 10-second break
+		//--------------------------- --------------------------- ---------------------------
 	} catch (error) {
 		console.log(
 			"An error occurred while running functions sequentially:",
@@ -495,6 +507,7 @@ const directoryByCitySyncFunc = async (lastCheckedDate) => {
 			responses.push(...batchResponses);
 
 			console.log(
+				"\x1b[32m%s\x1b[0m",
 				"ids",
 				batchResponses.map((response) => response?.id)
 			);
@@ -727,6 +740,7 @@ const directoryByCountrySyncFunc = async (lastCheckedDate) => {
 			responses.push(...batchResponses);
 
 			console.log(
+				"\x1b[34m%s\x1b[0m",
 				"ids",
 				batchResponses.map((response) => response?.id)
 			);
@@ -1398,6 +1412,7 @@ const languagesSyncFunc = async (lastCheckedDate, afterFunc = () => {}) => {
 			responses.push(...batchResponses);
 
 			console.log(
+				"\x1b[38;2;255;192;203m%s\x1b[0m",
 				"ids",
 				batchResponses.map((response) => response?.id)
 			);
