@@ -138,13 +138,13 @@ const profileSyncFunc = async (lastCheckedDate, afterFunc = () => {}) => {
 										Number(
 											airtableProfile.fields["Total Vendor Rating"]?.toFixed(2)
 										) ?? 0,
-									"price-rating":
-										typeof airtableProfile.fields["Average Service Pricing"] ===
-										"number"
-											? price_rating_map.get(
-													airtableProfile.fields["Average Service Pricing"]
-											  )
-											: "",
+									"price-rating": "$60,000",
+									// typeof airtableProfile.fields["Average Service Pricing"] ===
+									// "number"
+									// 	? price_rating_map.get(
+									// 			airtableProfile.fields["Average Service Pricing"]
+									// 	  )
+									// 	: "",
 									"badge-color":
 										airtableProfile.fields["Name (from Profile Type)"][0] ===
 										"Enterprise"
@@ -230,13 +230,13 @@ const profileSyncFunc = async (lastCheckedDate, afterFunc = () => {}) => {
 										Number(
 											airtableProfile.fields["Total Vendor Rating"]?.toFixed(2)
 										) ?? 0,
-									"price-rating":
-										typeof airtableProfile.fields["Average Service Pricing"] ===
-										"number"
-											? price_rating_map.get(
-													airtableProfile.fields["Average Service Pricing"]
-											  )
-											: "",
+									"price-rating": "$60,000",
+									// typeof airtableProfile.fields["Average Service Pricing"] ===
+									// "number"
+									// 	? price_rating_map.get(
+									// 			airtableProfile.fields["Average Service Pricing"]
+									// 	  )
+									// 	: "",
 									"badge-color":
 										airtableProfile.fields["Name (from Profile Type)"][0] ===
 										"Enterprise"
