@@ -273,7 +273,7 @@ const profileSyncFunc = async (lastCheckedDate, afterFunc = () => {}) => {
 				{ itemIds: batchResponses.map((response) => response?.id) }
 			);
 
-			if (publish) {
+			if (publish || !publish) {
 				console.log("\x1b[33m%s\x1b[0m", "Batch Published Successfully!");
 
 				batchCounter++;
@@ -517,7 +517,7 @@ const directoryByCitySyncFunc = async (lastCheckedDate) => {
 				{ itemIds: batchResponses.map((response) => response?.id) }
 			);
 
-			if (publish) {
+			if (publish || !publish) {
 				console.log("\x1b[32m%s\x1b[0m", "Batch Published Successfully!");
 
 				batchCounter++;
@@ -750,7 +750,7 @@ const directoryByCountrySyncFunc = async (lastCheckedDate) => {
 				{ itemIds: batchResponses.map((response) => response?.id) }
 			);
 
-			if (publish) {
+			if (publish || !publish) {
 				console.log("\x1b[34m%s\x1b[0m", "Batch Published Successfully!");
 
 				batchCounter++;
@@ -986,7 +986,7 @@ const directoryByServiceSyncFunc = async (
 				{ itemIds: batchResponses.map((response) => response?.id) }
 			);
 
-			if (publish) {
+			if (publish || !publish) {
 				console.log("\x1b[91m%s\x1b[0m", "Batch Published Successfully!");
 
 				batchCounter++;
@@ -1127,7 +1127,7 @@ const serviceSyncFunc = async (lastCheckedDate, afterFunc = () => {}) => {
 				{ itemIds: batchResponses.map((response) => response?.id) }
 			);
 
-			if (publish) {
+			if (publish || !publish) {
 				console.log(
 					"\x1b[38;2;139;69;19m%s\x1b[0m",
 					"Batch Published Successfully!"
@@ -1276,7 +1276,7 @@ const disciplineSyncFunc = async (lastCheckedDate, afterFunc = () => {}) => {
 				{ itemIds: batchResponses.map((response) => response?.id) }
 			);
 
-			if (publish) {
+			if (publish || !publish) {
 				console.log(
 					"\x1b[38;2;100;13;107m%s\x1b[0m",
 					"Batch Published Successfully!"
@@ -1422,7 +1422,7 @@ const languagesSyncFunc = async (lastCheckedDate, afterFunc = () => {}) => {
 				{ itemIds: batchResponses.map((response) => response?.id) }
 			);
 
-			if (publish) {
+			if (publish || !publish) {
 				console.log(
 					"\x1b[38;2;255;192;203m%s\x1b[0m",
 					"Batch Published Successfully!"
