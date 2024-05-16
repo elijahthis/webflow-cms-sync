@@ -7,12 +7,10 @@ const { cronSyncFunction, cronSyncFunction2 } = require("./cron");
 const {
 	profileSyncFunc,
 	directorySyncFunc,
-	addWebflowIdToAirtableRecordsSyncFunc,
 	serviceSyncFunc,
 	disciplineSyncFunc,
 	languagesSyncFunc,
-	addWebflowIdToAirtableDisciplinesSyncFunc,
-	addWebflowIdToAirtableServicesSyncFunc,
+	addWebflowIDSyncFunc,
 } = require("./syncFunc");
 const {
 	fetchRecentlyUpdatedProfilesFromAirtable,
@@ -35,10 +33,6 @@ const state = {
 		isJobRunning: false,
 		lastCheckedDate: new Date("01-01-1970").toISOString(),
 	},
-	webflow_ID_profiles: {
-		isJobRunning: false,
-		lastCheckedDate: new Date("01-01-1970").toISOString(),
-	},
 	directory: {
 		isJobRunning: false,
 		lastCheckedDate: new Date("01-01-1970").toISOString(),
@@ -55,11 +49,7 @@ const state = {
 		isJobRunning: false,
 		lastCheckedDate: new Date("01-01-1970").toISOString(),
 	},
-	webflow_ID_disciplines: {
-		isJobRunning: false,
-		lastCheckedDate: new Date("01-01-1970").toISOString(),
-	},
-	webflow_ID_services: {
+	webflow_ID: {
 		isJobRunning: false,
 		lastCheckedDate: new Date("01-01-1970").toISOString(),
 	},
@@ -308,11 +298,6 @@ cron.schedule("*/90 * * * * *", async () => {
 	cronWrapper(profileSyncFunc, "profiles");
 });
 
-// Schedule polling every 120 seconds --- webflow_ID_profiles
-cron.schedule("*/90 * * * * *", async () => {
-	cronWrapper(addWebflowIdToAirtableRecordsSyncFunc, "webflow_ID_profiles");
-});
-
 // Schedule polling every 120 seconds --- directory
 cron.schedule("*/90 * * * * *", async () => {
 	cronWrapper(directorySyncFunc, "directory");
@@ -333,17 +318,9 @@ cron.schedule("*/90 * * * * *", async () => {
 	cronWrapper(languagesSyncFunc, "languages");
 });
 
-// Schedule polling every 120 seconds --- webflow_ID_disciplines
+// Schedule polling every 120 seconds --- webflow_ID
 cron.schedule("*/90 * * * * *", async () => {
-	cronWrapper(
-		addWebflowIdToAirtableDisciplinesSyncFunc,
-		"webflow_ID_disciplines"
-	);
-});
-
-// Schedule polling every 120 seconds --- webflow_ID_services
-cron.schedule("*/90 * * * * *", async () => {
-	cronWrapper(addWebflowIdToAirtableServicesSyncFunc, "webflow_ID_services");
+	cronWrapper(addWebflowIDSyncFunc, "webflow_ID");
 });
 
 // Start the server

@@ -37,6 +37,14 @@ const profileSyncFunc = async (lastCheckedDate, afterFunc = () => {}) => {
 
 		const responses = [];
 
+		const price_rating_map = new Map([
+			[1, "$0 - $40,000"],
+			[2, "$40,000 - $60,000"],
+			[3, "$60,000 - $80,000"],
+			[4, "$80,000 - $100,000"],
+			[5, "$100,000+"],
+		]);
+
 		while (startIndex < updatedAirtableProfiles.length) {
 			const batchAirtableProfiles = updatedAirtableProfiles.slice(
 				startIndex,
@@ -130,7 +138,13 @@ const profileSyncFunc = async (lastCheckedDate, afterFunc = () => {}) => {
 										Number(
 											airtableProfile.fields["Total Vendor Rating"]?.toFixed(2)
 										) ?? 0,
-									// "vendor-rating": airtableProfile.fields["Total Vendor Rating"]?.toFixed(2),
+									"price-rating":
+										typeof airtableProfile.fields["Average Service Pricing"] ===
+										"number"
+											? price_rating_map.get(
+													airtableProfile.fields["Average Service Pricing"]
+											  )
+											: "",
 									"badge-color":
 										airtableProfile.fields["Name (from Profile Type)"][0] ===
 										"Enterprise"
@@ -216,7 +230,13 @@ const profileSyncFunc = async (lastCheckedDate, afterFunc = () => {}) => {
 										Number(
 											airtableProfile.fields["Total Vendor Rating"]?.toFixed(2)
 										) ?? 0,
-									// "vendor-rating": airtableProfile.fields["Total Vendor Rating"]?.toFixed(2),
+									"price-rating":
+										typeof airtableProfile.fields["Average Service Pricing"] ===
+										"number"
+											? price_rating_map.get(
+													airtableProfile.fields["Average Service Pricing"]
+											  )
+											: "",
 									"badge-color":
 										airtableProfile.fields["Name (from Profile Type)"][0] ===
 										"Enterprise"
@@ -1422,11 +1442,21 @@ const languagesSyncFunc = async (lastCheckedDate, afterFunc = () => {}) => {
 	}
 };
 
+const addWebflowIDSyncFunc = async (lastCheckedDate, afterFunc = () => {}) => {
+	try {
+		await addWebflowIdToProfilesSyncFunc(lastCheckedDate);
+		await addWebflowIdToAirtableDisciplinesSyncFunc(lastCheckedDate);
+		await addWebflowIdToAirtableServicesSyncFunc(lastCheckedDate, afterFunc);
+	} catch (error) {
+		console.log(
+			"An error occurred while running functions sequentially:",
+			error
+		);
+	}
+};
+
 // Orange color for console logs -- \x1b[38;2;255;165;0m%s\x1b[0m
-const addWebflowIdToAirtableRecordsSyncFunc = async (
-	lastCheckedDate,
-	afterFunc = () => {}
-) => {
+const addWebflowIdToProfilesSyncFunc = async (lastCheckedDate) => {
 	try {
 		const updatedAirtableProfiles =
 			await fetchRecentlyUpdatedProfilesFromAirtable(lastCheckedDate);
@@ -1464,21 +1494,28 @@ const addWebflowIdToAirtableRecordsSyncFunc = async (
 					);
 
 					if (webflowProfile) {
-						response = await modifyAirtableRecord(
-							process.env.AIRTABLE_PROFILE_TABLE_ID,
-							airtableProfile.id,
-							{
-								fields: {
-									"Webflow ID": webflowProfile.id,
-								},
-							}
-						);
+						if (airtableProfile.fields["Webflow ID"]) {
+							console.log(
+								"\x1b[38;2;255;165;0m%s\x1b[0m",
+								`${webflowProfile?.fieldData?.name} already has a Webflow ID in Airtable.`
+							);
+						} else {
+							response = await modifyAirtableRecord(
+								process.env.AIRTABLE_PROFILE_TABLE_ID,
+								airtableProfile.id,
+								{
+									fields: {
+										"Webflow ID": webflowProfile.id,
+									},
+								}
+							);
 
-						console.log(
-							"\x1b[38;2;255;165;0m%s\x1b[0m",
-							`Updating Airtable record with Webflow CMS ID ${webflowProfile.id} ${webflowProfile?.fieldData?.name}...`
-						);
-						// console.log("Not today...");
+							console.log(
+								"\x1b[38;2;255;165;0m%s\x1b[0m",
+								`Updating Airtable record with Webflow CMS ID ${webflowProfile.id} ${webflowProfile?.fieldData?.name}...`
+							);
+							// console.log("Not today...");
+						}
 					} else {
 						console.log(
 							"\x1b[38;2;255;165;0m%s\x1b[0m",
@@ -1512,16 +1549,10 @@ const addWebflowIdToAirtableRecordsSyncFunc = async (
 	} catch (error) {
 		console.log("\x1b[38;2;255;165;0m%s\x1b[0m", error);
 		return [];
-	} finally {
-		afterFunc();
 	}
 };
-
 // Indigo color for console logs -- \x1b[38;2;75;0;130m%s\x1b[0m
-const addWebflowIdToAirtableDisciplinesSyncFunc = async (
-	lastCheckedDate,
-	afterFunc = () => {}
-) => {
+const addWebflowIdToAirtableDisciplinesSyncFunc = async (lastCheckedDate) => {
 	try {
 		const updatedAirtableProfiles =
 			await fetchRecentlyUpdatedServicesFromAirtable(
@@ -1563,21 +1594,28 @@ const addWebflowIdToAirtableDisciplinesSyncFunc = async (
 					);
 
 					if (webflowProfile) {
-						response = await modifyAirtableRecord(
-							process.env.AIRTABLE_DISCIPLINES_TABLE_ID,
-							airtableProfile.id,
-							{
-								fields: {
-									"Webflow ID": webflowProfile.id,
-								},
-							}
-						);
+						if (airtableProfile.fields["Webflow ID"]) {
+							console.log(
+								"\x1b[38;2;75;0;130m%s\x1b[0m",
+								`${webflowProfile?.fieldData?.name} already has a Webflow ID in Airtable.`
+							);
+						} else {
+							response = await modifyAirtableRecord(
+								process.env.AIRTABLE_DISCIPLINES_TABLE_ID,
+								airtableProfile.id,
+								{
+									fields: {
+										"Webflow ID": webflowProfile.id,
+									},
+								}
+							);
 
-						console.log(
-							"\x1b[38;2;75;0;130m%s\x1b[0m",
-							`Updating Airtable record with Webflow CMS ID ${webflowProfile.id} ${webflowProfile?.fieldData?.name}...`
-						);
-						// console.log("Not today...");
+							console.log(
+								"\x1b[38;2;75;0;130m%s\x1b[0m",
+								`Updating Airtable record with Webflow CMS ID ${webflowProfile.id} ${webflowProfile?.fieldData?.name}...`
+							);
+							// console.log("Not today...");
+						}
 					} else {
 						console.log(
 							"\x1b[38;2;75;0;130m%s\x1b[0m",
@@ -1611,11 +1649,8 @@ const addWebflowIdToAirtableDisciplinesSyncFunc = async (
 	} catch (error) {
 		console.log("\x1b[38;2;75;0;130m%s\x1b[0m", error);
 		return [];
-	} finally {
-		afterFunc();
 	}
 };
-
 // Indigo color for console logs -- \x1b[38;2;228;197;158m%s\x1b[0m
 const addWebflowIdToAirtableServicesSyncFunc = async (
 	lastCheckedDate,
@@ -1662,21 +1697,28 @@ const addWebflowIdToAirtableServicesSyncFunc = async (
 					);
 
 					if (webflowProfile) {
-						response = await modifyAirtableRecord(
-							process.env.AIRTABLE_SERVICE_TABLE_ID,
-							airtableProfile.id,
-							{
-								fields: {
-									"Webflow ID": webflowProfile.id,
-								},
-							}
-						);
+						if (airtableProfile.fields["Webflow ID"]) {
+							console.log(
+								"\x1b[38;2;228;197;158m%s\x1b[0m",
+								`${webflowProfile?.fieldData?.name} already has a Webflow ID in Airtable.`
+							);
+						} else {
+							response = await modifyAirtableRecord(
+								process.env.AIRTABLE_SERVICE_TABLE_ID,
+								airtableProfile.id,
+								{
+									fields: {
+										"Webflow ID": webflowProfile.id,
+									},
+								}
+							);
 
-						console.log(
-							"\x1b[38;2;228;197;158m%s\x1b[0m",
-							`Updating Airtable record with Webflow CMS ID ${webflowProfile.id} ${webflowProfile?.fieldData?.name}...`
-						);
-						// console.log("Not today...");
+							console.log(
+								"\x1b[38;2;228;197;158m%s\x1b[0m",
+								`Updating Airtable record with Webflow CMS ID ${webflowProfile.id} ${webflowProfile?.fieldData?.name}...`
+							);
+							// console.log("Not today...");
+						}
 					} else {
 						console.log(
 							"\x1b[38;2;228;197;158m%s\x1b[0m",
@@ -1718,10 +1760,8 @@ const addWebflowIdToAirtableServicesSyncFunc = async (
 module.exports = {
 	profileSyncFunc,
 	directorySyncFunc,
-	addWebflowIdToAirtableRecordsSyncFunc,
 	serviceSyncFunc,
 	disciplineSyncFunc,
 	languagesSyncFunc,
-	addWebflowIdToAirtableDisciplinesSyncFunc,
-	addWebflowIdToAirtableServicesSyncFunc,
+	addWebflowIDSyncFunc,
 };

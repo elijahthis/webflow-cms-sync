@@ -334,7 +334,7 @@ const fetchWebflowCMSRecordsCount = async (collectionID) => {
 			`https://api.webflow.com/v2/collections/${collectionID}/items?limit=1`,
 			{
 				headers: {
-					Authorization: `Bearer ${process.env.WEBFLOW_TOKEN_1}`,
+					Authorization: `Bearer ${process.env.WEBFLOW_TOKEN_GENERAL}`,
 				},
 			}
 		);
@@ -362,7 +362,7 @@ const fetchAllWebflowCMSRecords = async (collectionID) => {
 				}`,
 				{
 					headers: {
-						Authorization: `Bearer ${process.env.WEBFLOW_TOKEN_1}`,
+						Authorization: `Bearer ${process.env.WEBFLOW_TOKEN_GENERAL}`,
 					},
 				}
 			);
@@ -420,6 +420,7 @@ const fetchRecentlyUpdatedServicesFromAirtable = async (
 				: ""
 		}`;
 		// view=Grid%20View
+		console.log("url", url);
 		try {
 			let response = await axios.get(url, {
 				headers: {
