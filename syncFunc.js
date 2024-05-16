@@ -284,11 +284,21 @@ const profileSyncFunc = async (lastCheckedDate, afterFunc = () => {}) => {
 	}
 };
 
+const directorySyncFunc = async (lastCheckedDate, afterFunc = () => {}) => {
+	try {
+		await directoryByCitySyncFunc(lastCheckedDate);
+		await directoryByCountrySyncFunc(lastCheckedDate);
+		await directoryByServiceSyncFunc(lastCheckedDate, afterFunc);
+	} catch (error) {
+		console.log(
+			"An error occurred while running functions sequentially:",
+			error
+		);
+	}
+};
+
 // Green color for console logs -- \x1b[32m%s\x1b[0m
-const directoryByCitySyncFunc = async (
-	lastCheckedDate,
-	afterFunc = () => {}
-) => {
+const directoryByCitySyncFunc = async (lastCheckedDate) => {
 	try {
 		const updatedAirtableProfiles =
 			await fetchRecentlyUpdatedServicesFromAirtable(
@@ -313,7 +323,7 @@ const directoryByCitySyncFunc = async (
 			return [];
 		}
 
-		const batchSize = 20;
+		const batchSize = 15;
 		let startIndex = 0;
 		let endIndex = Math.min(batchSize, updatedAirtableProfiles.length);
 		let batchCounter = 0;
@@ -332,20 +342,6 @@ const directoryByCitySyncFunc = async (
 				"endIndex",
 				endIndex
 			);
-			// console.log(
-			// 	"Batch Airtable Profiles: ",
-			// 	batchAirtableProfiles.map((airtableProfile) => ({
-			// 		name: airtableProfile.fields["H1 Title Text"],
-			// 		vendors: airtableProfile.fields?.[
-			// 			"Webflow ID (from Vendor) (from Address for Service) (from City)"
-			// 		]?.map(
-			// 			(item, index) =>
-			// 				airtableProfile.fields[
-			// 					"Vendor (from Vendor) (from Address for Service) (from City)"
-			// 				]?.[index]
-			// 		),
-			// 	}))
-			// );
 
 			const webflowUpdatePromises = batchAirtableProfiles.map(
 				async (airtableProfile, index_1) => {
@@ -488,7 +484,7 @@ const directoryByCitySyncFunc = async (
 				console.log("\x1b[32m%s\x1b[0m", "Batch Published Successfully!");
 
 				batchCounter++;
-				if (batchCounter === 2) {
+				if (batchCounter === 3) {
 					console.log(
 						"\x1b[32m%s\x1b[0m",
 						"Reached rate limit, pausing for 60 seconds..."
@@ -515,15 +511,10 @@ const directoryByCitySyncFunc = async (
 	} catch (error) {
 		console.log("\x1b[32m%s\x1b[0m", error);
 		return [];
-	} finally {
-		afterFunc();
 	}
 };
 // Blue color for console logs -- \x1b[34m%s\x1b[0m
-const directoryByCountrySyncFunc = async (
-	lastCheckedDate,
-	afterFunc = () => {}
-) => {
+const directoryByCountrySyncFunc = async (lastCheckedDate) => {
 	try {
 		const updatedAirtableProfiles =
 			await fetchRecentlyUpdatedServicesFromAirtable(
@@ -548,7 +539,7 @@ const directoryByCountrySyncFunc = async (
 			return [];
 		}
 
-		const batchSize = 20;
+		const batchSize = 15;
 		let startIndex = 0;
 		let endIndex = Math.min(batchSize, updatedAirtableProfiles.length);
 		let batchCounter = 0;
@@ -612,7 +603,7 @@ const directoryByCountrySyncFunc = async (
 
 						response = await updateWebflowCMSItem(
 							process.env.WEBFLOW_DIRECTORY_COLLECTION_ID,
-							process.env.WEBFLOW_TOKEN_4,
+							process.env.WEBFLOW_TOKEN_2,
 							webflowProfile?.id,
 							{
 								fieldData: {
@@ -669,7 +660,7 @@ const directoryByCountrySyncFunc = async (
 
 						response = await addItemToWebflowCMS(
 							process.env.WEBFLOW_DIRECTORY_COLLECTION_ID,
-							process.env.WEBFLOW_TOKEN_4,
+							process.env.WEBFLOW_TOKEN_2,
 							{
 								fieldData: {
 									name: airtableProfile.fields["H1 Title Text"],
@@ -717,7 +708,7 @@ const directoryByCountrySyncFunc = async (
 			);
 			const publish = await publishWebflowCMSItems(
 				process.env.WEBFLOW_DIRECTORY_COLLECTION_ID,
-				process.env.WEBFLOW_TOKEN_3,
+				process.env.WEBFLOW_TOKEN_2,
 				{ itemIds: batchResponses.map((response) => response?.id) }
 			);
 
@@ -725,7 +716,7 @@ const directoryByCountrySyncFunc = async (
 				console.log("\x1b[34m%s\x1b[0m", "Batch Published Successfully!");
 
 				batchCounter++;
-				if (batchCounter === 2) {
+				if (batchCounter === 3) {
 					console.log(
 						"\x1b[34m%s\x1b[0m",
 						"Reached rate limit, pausing for 60 seconds..."
@@ -752,8 +743,6 @@ const directoryByCountrySyncFunc = async (
 	} catch (error) {
 		console.log("\x1b[34m%s\x1b[0m", error);
 		return [];
-	} finally {
-		afterFunc();
 	}
 };
 // Light red color for console logs -- \x1b[91m%s\x1b[0m
@@ -785,7 +774,7 @@ const directoryByServiceSyncFunc = async (
 			return [];
 		}
 
-		const batchSize = 20;
+		const batchSize = 15;
 		let startIndex = 0;
 		let endIndex = Math.min(batchSize, updatedAirtableProfiles.length);
 		let batchCounter = 0;
@@ -849,7 +838,7 @@ const directoryByServiceSyncFunc = async (
 
 						response = await updateWebflowCMSItem(
 							process.env.WEBFLOW_DIRECTORY_COLLECTION_ID,
-							process.env.WEBFLOW_TOKEN_3,
+							process.env.WEBFLOW_TOKEN_2,
 							webflowProfile?.id,
 							{
 								fieldData: {
@@ -906,7 +895,7 @@ const directoryByServiceSyncFunc = async (
 
 						response = await addItemToWebflowCMS(
 							process.env.WEBFLOW_DIRECTORY_COLLECTION_ID,
-							process.env.WEBFLOW_TOKEN_3,
+							process.env.WEBFLOW_TOKEN_2,
 							{
 								fieldData: {
 									name: airtableProfile.fields["H1 Title Text"],
@@ -955,7 +944,7 @@ const directoryByServiceSyncFunc = async (
 			);
 			const publish = await publishWebflowCMSItems(
 				process.env.WEBFLOW_DIRECTORY_COLLECTION_ID,
-				process.env.WEBFLOW_TOKEN_3,
+				process.env.WEBFLOW_TOKEN_2,
 				{ itemIds: batchResponses.map((response) => response?.id) }
 			);
 
@@ -963,7 +952,7 @@ const directoryByServiceSyncFunc = async (
 				console.log("\x1b[91m%s\x1b[0m", "Batch Published Successfully!");
 
 				batchCounter++;
-				if (batchCounter === 2) {
+				if (batchCounter === 3) {
 					console.log(
 						"\x1b[91m%s\x1b[0m",
 						"Reached rate limit, pausing for 60 seconds..."
@@ -1052,7 +1041,7 @@ const serviceSyncFunc = async (lastCheckedDate, afterFunc = () => {}) => {
 					if (webflowProfile) {
 						response = await updateWebflowCMSItem(
 							process.env.WEBFLOW_SERVICE_COLLECTION_ID,
-							process.env.WEBFLOW_TOKEN_4,
+							process.env.WEBFLOW_TOKEN_3,
 							webflowProfile?.id,
 							{
 								fieldData: {
@@ -1071,7 +1060,7 @@ const serviceSyncFunc = async (lastCheckedDate, afterFunc = () => {}) => {
 					} else {
 						response = await addItemToWebflowCMS(
 							process.env.WEBFLOW_SERVICE_COLLECTION_ID,
-							process.env.WEBFLOW_TOKEN_4,
+							process.env.WEBFLOW_TOKEN_3,
 							{
 								fieldData: {
 									name: airtableProfile.fields["Name"],
@@ -1096,7 +1085,7 @@ const serviceSyncFunc = async (lastCheckedDate, afterFunc = () => {}) => {
 
 			const publish = await publishWebflowCMSItems(
 				process.env.WEBFLOW_SERVICE_COLLECTION_ID,
-				process.env.WEBFLOW_TOKEN_4,
+				process.env.WEBFLOW_TOKEN_3,
 				{ itemIds: batchResponses.map((response) => response?.id) }
 			);
 
@@ -1196,7 +1185,7 @@ const disciplineSyncFunc = async (lastCheckedDate, afterFunc = () => {}) => {
 					if (webflowProfile) {
 						response = await updateWebflowCMSItem(
 							process.env.WEBFLOW_DISCIPLINE_COLLECTION_ID,
-							process.env.WEBFLOW_TOKEN_1,
+							process.env.WEBFLOW_TOKEN_4,
 							webflowProfile?.id,
 							{
 								fieldData: {
@@ -1215,7 +1204,7 @@ const disciplineSyncFunc = async (lastCheckedDate, afterFunc = () => {}) => {
 					} else {
 						response = await addItemToWebflowCMS(
 							process.env.WEBFLOW_DISCIPLINE_COLLECTION_ID,
-							process.env.WEBFLOW_TOKEN_1,
+							process.env.WEBFLOW_TOKEN_4,
 							{
 								fieldData: {
 									name: airtableProfile.fields["Name"],
@@ -1245,7 +1234,7 @@ const disciplineSyncFunc = async (lastCheckedDate, afterFunc = () => {}) => {
 			);
 			const publish = await publishWebflowCMSItems(
 				process.env.WEBFLOW_DISCIPLINE_COLLECTION_ID,
-				process.env.WEBFLOW_TOKEN_1,
+				process.env.WEBFLOW_TOKEN_4,
 				{ itemIds: batchResponses.map((response) => response?.id) }
 			);
 
@@ -1346,7 +1335,7 @@ const languagesSyncFunc = async (lastCheckedDate, afterFunc = () => {}) => {
 					if (webflowProfile) {
 						response = await updateWebflowCMSItem(
 							process.env.WEBFLOW_LANGUAGES_COLLECTION_ID,
-							process.env.WEBFLOW_TOKEN_2,
+							process.env.WEBFLOW_TOKEN_3,
 							webflowProfile?.id,
 							{
 								fieldData: {
@@ -1363,7 +1352,7 @@ const languagesSyncFunc = async (lastCheckedDate, afterFunc = () => {}) => {
 					} else {
 						response = await addItemToWebflowCMS(
 							process.env.WEBFLOW_LANGUAGES_COLLECTION_ID,
-							process.env.WEBFLOW_TOKEN_2,
+							process.env.WEBFLOW_TOKEN_3,
 							{
 								fieldData: {
 									name: airtableProfile.fields["Language"],
@@ -1390,7 +1379,7 @@ const languagesSyncFunc = async (lastCheckedDate, afterFunc = () => {}) => {
 			);
 			const publish = await publishWebflowCMSItems(
 				process.env.WEBFLOW_LANGUAGES_COLLECTION_ID,
-				process.env.WEBFLOW_TOKEN_2,
+				process.env.WEBFLOW_TOKEN_3,
 				{ itemIds: batchResponses.map((response) => response?.id) }
 			);
 
@@ -1728,9 +1717,7 @@ const addWebflowIdToAirtableServicesSyncFunc = async (
 
 module.exports = {
 	profileSyncFunc,
-	directoryByCitySyncFunc,
-	directoryByCountrySyncFunc,
-	directoryByServiceSyncFunc,
+	directorySyncFunc,
 	addWebflowIdToAirtableRecordsSyncFunc,
 	serviceSyncFunc,
 	disciplineSyncFunc,

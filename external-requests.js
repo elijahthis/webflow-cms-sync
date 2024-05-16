@@ -334,7 +334,7 @@ const fetchWebflowCMSRecordsCount = async (collectionID) => {
 			`https://api.webflow.com/v2/collections/${collectionID}/items?limit=1`,
 			{
 				headers: {
-					Authorization: `Bearer ${process.env.WEBFLOW_TOKEN}`,
+					Authorization: `Bearer ${process.env.WEBFLOW_TOKEN_1}`,
 				},
 			}
 		);
@@ -362,7 +362,7 @@ const fetchAllWebflowCMSRecords = async (collectionID) => {
 				}`,
 				{
 					headers: {
-						Authorization: `Bearer ${process.env.WEBFLOW_TOKEN}`,
+						Authorization: `Bearer ${process.env.WEBFLOW_TOKEN_1}`,
 					},
 				}
 			);
