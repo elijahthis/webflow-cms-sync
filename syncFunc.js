@@ -148,7 +148,7 @@ const profileSyncFunc = async (lastCheckedDate, afterFunc = () => {}) => {
 											  )
 											: "",
 									"badge-color":
-										airtableProfile.fields["Name (from Profile Type)"][0] ===
+										airtableProfile.fields["Name (from Profile Type)"]?.[0] ===
 										"Enterprise"
 											? "#EAAA08"
 											: "#54F2D6",
@@ -242,7 +242,7 @@ const profileSyncFunc = async (lastCheckedDate, afterFunc = () => {}) => {
 											  )
 											: "",
 									"badge-color":
-										airtableProfile.fields["Name (from Profile Type)"][0] ===
+										airtableProfile.fields["Name (from Profile Type)"]?.[0] ===
 										"Enterprise"
 											? "#EAAA08"
 											: "#54F2D6",
