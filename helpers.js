@@ -15,4 +15,13 @@ async function executeWithTiming(func) {
 	console.log(`Function took ${executionTime / 1000} seconds to execute.`);
 }
 
-module.exports = { generateRealIndex, executeWithTiming };
+function filterExcessItemsToDelete(arr1, arr2, key1, key2) {
+	const slugSet = new Set(arr2.map((obj) => obj[key1]));
+	return arr1.filter((obj) => !slugSet.has(obj[key2]));
+}
+
+module.exports = {
+	generateRealIndex,
+	executeWithTiming,
+	filterExcessItemsToDelete,
+};

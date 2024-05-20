@@ -6,21 +6,102 @@ const {
 	fetchRecentlyUpdatedProfilesFromAirtable,
 	fetchAllWebflowCMSRecords,
 	updateWebflowCMSItem,
+	deleteWebflowCMSItem,
 	fetchRecentlyUpdatedDirectoriesFromAirtable,
 	modifyAirtableRecord,
 	fetchRecentlyUpdatedServicesFromAirtable,
 	publishWebflowCMSItems,
+	filterExcessItemsToDelete,
 } = require("./external-requests");
-const { generateRealIndex, executeWithTiming } = require("./helpers");
+const {
+	generateRealIndex,
+	executeWithTiming,
+	filterExcessItemsToDelete,
+} = require("./helpers");
 
 // Yellow color for console logs -- \x1b[33m%s\x1b[0m
+const deleteProfiles = async (allAirtableProfiles, allWebflowCMSRecords) => {
+	const excessItemsToDelete = filterExcessItemsToDelete(
+		allAirtableProfiles,
+		allWebflowCMSRecords,
+		"Slug - Final",
+		"slug"
+	);
+
+	const batchSize = 15;
+	let startIndex = 0;
+	let endIndex = Math.min(batchSize, excessItemsToDelete.length);
+	let batchCounter = 0;
+	const responses = [];
+
+	while (startIndex < excessItemsToDelete.length) {
+		const batchWebflowItems = excessItemsToDelete.slice(startIndex, endIndex);
+		console.log(
+			"\x1b[33m%s\x1b[0m",
+			"DELETION: startIndex",
+			startIndex,
+			"DELETION: endIndex",
+			endIndex
+		);
+
+		const webflowDeletePromises = batchWebflowItems.map(
+			async (webflowProfile) => {
+				let response;
+
+				response = await deleteWebflowCMSItem(
+					process.env.WEBFLOW_VENDOR_COLLECTION_ID,
+					process.env.WEBFLOW_TOKEN_1,
+					webflowProfile?.id
+				);
+
+				console.log(
+					"\x1b[33m%s\x1b[0m",
+					`DELETING Webflow CMS record with ID ${webflowProfile.id} ${webflowProfile?.fieldData?.name}...`
+				);
+
+				return response;
+			}
+		);
+
+		const batchResponses = await Promise.all(webflowDeletePromises);
+		responses.push(...batchResponses);
+
+		console.log(
+			"\x1b[33m%s\x1b[0m",
+			"DELETION: ids",
+			batchResponses.map((response) => response?.id)
+		);
+
+		batchCounter++;
+		if (batchCounter === 3) {
+			console.log(
+				"\x1b[33m%s\x1b[0m",
+				"DELETION: Reached rate limit, pausing for 60 seconds..."
+			);
+			await new Promise((resolve) => setTimeout(resolve, 45000)); // Pause for 45 seconds
+			batchCounter = 0; // Reset the batch counter after pausing
+		}
+
+		startIndex = endIndex;
+		endIndex = Math.min(startIndex + batchSize, excessItemsToDelete.length);
+	}
+};
 const profileSyncFunc = async (lastCheckedDate, afterFunc = () => {}) => {
 	try {
 		const updatedAirtableProfiles =
 			await fetchRecentlyUpdatedProfilesFromAirtable(lastCheckedDate);
+		const allAirtableProfiles = await fetchRecentlyUpdatedProfilesFromAirtable(
+			new Date("01-01-1970").toISOString()
+		);
 		const allWebflowCMSRecords = await fetchAllWebflowCMSRecords(
 			process.env.WEBFLOW_VENDOR_COLLECTION_ID
 		);
+
+		if (allWebflowCMSRecords.length > allAirtableProfiles.length) {
+			deleteProfiles(allAirtableProfiles, allWebflowCMSRecords);
+			console.log("Beginning 45-second break after DELETION - deleteProfiles");
+			await new Promise((resolve) => setTimeout(resolve, 45000)); // 45-second break
+		}
 
 		if (updatedAirtableProfiles.length === 0) {
 			console.log(

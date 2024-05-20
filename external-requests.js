@@ -140,6 +140,39 @@ const updateWebflowCMSItem = async (
 	}
 };
 
+const deleteWebflowCMSItem = async (
+	collectionID,
+	WEBFLOW_TOKEN,
+	itemId,
+	res
+) => {
+	// console.log("payload", payload);
+
+	try {
+		// Make a request to Webflow CMS API to update data
+		const response = await axios.delete(
+			`https://api.webflow.com/v2/collections/${collectionID}/items/${itemId}`,
+			{
+				headers: {
+					Authorization: `Bearer ${WEBFLOW_TOKEN}`,
+				},
+			}
+		);
+
+		return response.data;
+	} catch (error) {
+		// console.error("Error updating Webflow CMS:", error);
+		// throw new Error("Failed to update Webflow CMS", error);
+		if (res)
+			res.status(error.status || 500).json({
+				error: "Failed to delete Webflow CMS",
+				payload,
+				error,
+				errorData: error?.response?.data,
+			});
+	}
+};
+
 const fetchAirtableRecordsCount = async () => {
 	try {
 		const records = await view.all();
@@ -479,4 +512,5 @@ module.exports = {
 	modifyAirtableRecord,
 	fetchRecentlyUpdatedServicesFromAirtable,
 	publishWebflowCMSItems,
+	deleteWebflowCMSItem,
 };
