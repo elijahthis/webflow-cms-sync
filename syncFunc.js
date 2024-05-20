@@ -21,13 +21,19 @@ const {
 // Yellow color for console logs -- \x1b[33m%s\x1b[0m
 const deleteProfiles = async (allAirtableProfiles, allWebflowCMSRecords) => {
 	const excessItemsToDelete = filterExcessItemsToDelete(
-		allAirtableProfiles,
 		allWebflowCMSRecords,
-		"Slug - Final",
-		"slug"
+		allAirtableProfiles,
+		"slug",
+		"Slug - Final"
 	);
 
-	console.log("\x1b[33m%s\x1b[0m", "excessItemsToDelete", excessItemsToDelete);
+	console.log(
+		"\x1b[33m%s\x1b[0m",
+		"excessItemsToDelete",
+		allAirtableProfiles,
+		allWebflowCMSRecords,
+		excessItemsToDelete
+	);
 
 	const batchSize = 15;
 	let startIndex = 0;
