@@ -27,6 +27,8 @@ const deleteProfiles = async (allAirtableProfiles, allWebflowCMSRecords) => {
 		"slug"
 	);
 
+	console.log("\x1b[33m%s\x1b[0m", "excessItemsToDelete", excessItemsToDelete);
+
 	const batchSize = 15;
 	let startIndex = 0;
 	let endIndex = Math.min(batchSize, excessItemsToDelete.length);
@@ -97,8 +99,11 @@ const profileSyncFunc = async (lastCheckedDate, afterFunc = () => {}) => {
 		);
 
 		if (allWebflowCMSRecords.length > allAirtableProfiles.length) {
-			deleteProfiles(allAirtableProfiles, allWebflowCMSRecords);
-			console.log("Beginning 45-second break after DELETION - deleteProfiles");
+			await deleteProfiles(allAirtableProfiles, allWebflowCMSRecords);
+			console.log(
+				"\x1b[33m%s\x1b[0m",
+				"Beginning 45-second break after DELETION - deleteProfiles"
+			);
 			await new Promise((resolve) => setTimeout(resolve, 45000)); // 45-second break
 		}
 
