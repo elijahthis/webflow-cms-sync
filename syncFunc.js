@@ -11,7 +11,6 @@ const {
 	modifyAirtableRecord,
 	fetchRecentlyUpdatedServicesFromAirtable,
 	publishWebflowCMSItems,
-	filterExcessItemsToDelete,
 } = require("./external-requests");
 const {
 	generateRealIndex,
