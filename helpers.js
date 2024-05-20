@@ -16,8 +16,8 @@ async function executeWithTiming(func) {
 }
 
 function filterExcessItemsToDelete(arr1, arr2, key1, key2) {
-	const slugSet = new Set(arr2.map((obj) => obj[key2]));
-	return arr1.filter((obj) => !slugSet.has(obj[key1]));
+	const slugSet = new Set(arr2.map((obj) => obj?.fields?.[key2]));
+	return arr1.filter((obj) => !slugSet.has(obj?.fieldData?.[key1]));
 }
 
 module.exports = {

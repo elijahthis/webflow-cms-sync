@@ -27,13 +27,7 @@ const deleteProfiles = async (allAirtableProfiles, allWebflowCMSRecords) => {
 		"Slug - Final"
 	);
 
-	console.log(
-		"\x1b[33m%s\x1b[0m",
-		"excessItemsToDelete",
-		allAirtableProfiles,
-		allWebflowCMSRecords,
-		excessItemsToDelete
-	);
+	console.log("\x1b[33m%s\x1b[0m", "excessItemsToDelete", excessItemsToDelete);
 
 	const batchSize = 15;
 	let startIndex = 0;
