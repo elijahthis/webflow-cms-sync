@@ -27,7 +27,13 @@ const deleteProfiles = async (allAirtableProfiles, allWebflowCMSRecords) => {
 		"Slug - Final"
 	);
 
-	console.log("\x1b[33m%s\x1b[0m", "excessItemsToDelete", excessItemsToDelete);
+	console.log(
+		"\x1b[33m%s\x1b[0m",
+		"excessItemsToDelete",
+		excessItemsToDelete?.map(
+			(item) => `${item?.id} -- ${item?.fieldData?.name}`
+		)
+	);
 
 	const batchSize = 15;
 	let startIndex = 0;
@@ -237,6 +243,12 @@ const profileSyncFunc = async (lastCheckedDate, afterFunc = () => {}) => {
 										"Enterprise"
 											? "#EAAA08"
 											: "#54F2D6",
+									"service-ids":
+										airtableProfile.fields[
+											"Webflow ID (from Services) (from Disciplines)"
+										],
+									"discipline-ids":
+										airtableProfile.fields["Webflow ID (from Disciplines)"],
 								},
 							}
 						);
@@ -331,6 +343,12 @@ const profileSyncFunc = async (lastCheckedDate, afterFunc = () => {}) => {
 										"Enterprise"
 											? "#EAAA08"
 											: "#54F2D6",
+									"service-ids":
+										airtableProfile.fields[
+											"Webflow ID (from Services) (from Disciplines)"
+										],
+									"discipline-ids":
+										airtableProfile.fields["Webflow ID (from Disciplines)"],
 								},
 							}
 						);
