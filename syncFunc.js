@@ -243,12 +243,18 @@ const profileSyncFunc = async (lastCheckedDate, afterFunc = () => {}) => {
 										"Enterprise"
 											? "#EAAA08"
 											: "#54F2D6",
-									"service-ids":
-										airtableProfile.fields[
-											"Webflow ID (from Services) (from Disciplines)"
-										],
-									"discipline-ids":
-										airtableProfile.fields["Webflow ID (from Disciplines)"],
+									"service-ids": [],
+									"discipline-ids": [],
+									"services-rich-text": `
+										<div>${airtableProfile.fields["Name (from Services) (from Disciplines)"]?.map(
+											(item) =>
+												`<div fs-cmsfilter-field="Service">${item}</div>`
+										)}</div>`?.replace(/,/g, ""),
+									"disciplines-rich-text": `
+									<div>${airtableProfile.fields["Name (from Disciplines)"]?.map(
+										(item) =>
+											`<div fs-cmsfilter-field="Discipline">${item}</div>`
+									)}</div>`?.replace(/,/g, ""),
 								},
 							}
 						);
